@@ -32,6 +32,11 @@ const twitchLoginBtn = document.getElementById('twitchLoginBtn');
 const connectedChannel = document.getElementById('connectedChannel');
 const disconnectBtn = document.getElementById('disconnectBtn');
 
+const secretWordFloat = document.getElementById('secretWordFloat');
+const secretToggle = document.getElementById('secretToggle');
+const secretFloatContent = document.getElementById('secretFloatContent');
+const secretWordDisplay = document.getElementById('secretWordDisplay');
+
 const secretWord = document.getElementById('secretWord');
 const gameDuration = document.getElementById('gameDuration');
 const joinDuration = document.getElementById('joinDuration');
@@ -48,6 +53,7 @@ const answerInput = document.getElementById('answerInput');
 const submitAnswerBtn = document.getElementById('submitAnswerBtn');
 const participantsQueue = document.getElementById('participantsQueue');
 const queueCount = document.getElementById('queueCount');
+const startQuestionsBtn = document.getElementById('startQuestionsBtn');
 const historyList = document.getElementById('historyList');
 const endGameBtn = document.getElementById('endGameBtn');
 
@@ -145,6 +151,12 @@ if (window.location.hash.includes('access_token')) {
     handleOAuthCallback();
 }
 
+// Toggle Secret Word Float
+secretToggle.addEventListener('click', () => {
+    secretWordFloat.classList.toggle('collapsed');
+    secretToggle.textContent = secretWordFloat.classList.contains('collapsed') ? '+' : '−';
+});
+
 // Disconnect
 disconnectBtn.addEventListener('click', () => {
     if (gameState.client) {
@@ -177,27 +189,30 @@ startGameBtn.addEventListener('click', () => {
     gameState.participants = [];
     gameState.currentAskerIndex = -1;
     gameState.qanda = [];
-    gameState.isJoining = true;
+    gameState.isJoining = true; // مفتوح للانضمام
     gameState.isGameActive = false;
     gameState.gameDuration = parseInt(gameDuration.value);
-    const joinTime = parseInt(joinDuration.value);
     
-    secretDisplay.textContent = word;
+    secretWordDisplay.textContent = word;
+    secretWordFloat.style.display = 'block';
     activeGameCard.classList.remove('hidden');
     resultsCard.classList.add('hidden');
     questionCard.style.display = 'none';
     historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
     
     gameState.client.say(gameState.channel, `🎮 لعبة "من أنا؟" بدأت!`);
-    gameState.client.say(gameState.channel, `📝 اكتب "دخول" للمشاركة - ${joinTime} ثانية`);
+    gameState.client.say(gameState.channel, `📝 اكتب "دخول" للمشاركة`);
     
-    let remainingJoin = joinTime;
-    gameState.joinTimer = setInterval(() => {
-        remainingJoin--;
-        if (remainingJoin <= 0) {
-            startQuestionPhase();
-        }
-    }, 1000);
+    // لا يوجد مؤقت للانضمام - سيبدأ بضغط زر
+});
+
+// Start Questions Phase Manually
+startQuestionsBtn.addEventListener('click', () => {
+    if (gameState.participants.length === 0) {
+        alert('لا يوجد مشاركون! انتظر حتى ينضم أحد');
+        return;
+    }
+    startQuestionPhase();
 });
 
 function startQuestionPhase() {
