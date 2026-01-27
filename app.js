@@ -307,7 +307,9 @@ function selectNextAsker() {
         return;
     }
     
-    gameState.currentAskerIndex = (gameState.currentAskerIndex + 1) % gameState.participants.length;
+    // اختيار عشوائي
+    const randomIndex = Math.floor(Math.random() * gameState.participants.length);
+    gameState.currentAskerIndex = randomIndex;
     const asker = gameState.participants[gameState.currentAskerIndex];
     
     currentAsker.textContent = asker;
