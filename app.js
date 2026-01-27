@@ -39,8 +39,12 @@ const secretWordDisplay = document.getElementById('secretWordDisplay');
 
 const secretWord = document.getElementById('secretWord');
 const gameDuration = document.getElementById('gameDuration');
-const joinDuration = document.getElementById('joinDuration');
+const openJoinBtn = document.getElementById('openJoinBtn');
 const startGameBtn = document.getElementById('startGameBtn');
+const step1 = document.getElementById('step1');
+const step2 = document.getElementById('step2');
+const previewCount = document.getElementById('previewCount');
+const previewList = document.getElementById('previewList');
 
 const activeGameCard = document.getElementById('activeGameCard');
 const gameTimer = document.getElementById('gameTimer');
@@ -53,7 +57,6 @@ const answerInput = document.getElementById('answerInput');
 const submitAnswerBtn = document.getElementById('submitAnswerBtn');
 const participantsQueue = document.getElementById('participantsQueue');
 const queueCount = document.getElementById('queueCount');
-const startQuestionsBtn = document.getElementById('startQuestionsBtn');
 const historyList = document.getElementById('historyList');
 const endGameBtn = document.getElementById('endGameBtn');
 
@@ -131,8 +134,6 @@ async function connectWithOAuth(username, token) {
             setupSection.classList.add('hidden');
             gameSection.classList.remove('hidden');
             connectedChannel.textContent = username;
-            
-            client.say(username, '🎮 بوت "من أنا؟" متصل الآن! استعدوا للعب!');
         });
         
         client.on('disconnected', () => {
@@ -176,7 +177,37 @@ function handleDisconnect() {
     resultsCard.classList.add('hidden');
 }
 
-// Start Game
+// Step 1: Open Join
+openJoinBtn.addEventListener('click', () => {
+    gameState.isJoining = true;
+    gameState.participants = [];
+    
+    step1.classList.add('hidden');
+    step2.classList.remove('hidden');
+    
+    gameState.client.say(gameState.channel, `📝 اكتب "دخول" للمشاركة`);
+    
+    updatePreview();
+});
+
+function updatePreview() {
+    previewCount.textContent = gameState.participants.length;
+    
+    if (gameState.participants.length === 0) {
+        previewList.innerHTML = '<div class="empty-state">في انتظار المشاركين...</div>';
+        return;
+    }
+    
+    previewList.innerHTML = '';
+    gameState.participants.forEach(p => {
+        const badge = document.createElement('span');
+        badge.className = 'participant-badge';
+        badge.textContent = p;
+        previewList.appendChild(badge);
+    });
+}
+
+// Step 2: Start Game
 startGameBtn.addEventListener('click', () => {
     const word = secretWord.value.trim();
     
@@ -185,55 +216,34 @@ startGameBtn.addEventListener('click', () => {
         return;
     }
     
+    if (gameState.participants.length === 0) {
+        alert('لا يوجد مشاركون! انتظر حتى ينضم أحد');
+        return;
+    }
+    
     gameState.secretWord = word;
-    gameState.participants = [];
+    gameState.isJoining = false;
+    gameState.isGameActive = true;
     gameState.currentAskerIndex = -1;
     gameState.qanda = [];
-    gameState.isJoining = true; // مفتوح للانضمام
-    gameState.isGameActive = false;
     gameState.gameDuration = parseInt(gameDuration.value);
+    gameState.startTime = Date.now();
     
     secretWordDisplay.textContent = word;
     secretWordFloat.style.display = 'block';
     activeGameCard.classList.remove('hidden');
     resultsCard.classList.add('hidden');
-    questionCard.style.display = 'none';
+    questionCard.style.display = 'block';
     historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
     
-    gameState.client.say(gameState.channel, `🎮 لعبة "من أنا؟" بدأت!`);
-    gameState.client.say(gameState.channel, `📝 اكتب "دخول" للمشاركة`);
+    step2.classList.add('hidden');
+    updateParticipantsQueue();
     
-    // لا يوجد مؤقت للانضمام - سيبدأ بضغط زر
-});
-
-// Start Questions Phase Manually
-startQuestionsBtn.addEventListener('click', () => {
-    if (gameState.participants.length === 0) {
-        alert('لا يوجد مشاركون! انتظر حتى ينضم أحد');
-        return;
-    }
-    startQuestionPhase();
-});
-
-function startQuestionPhase() {
-    clearInterval(gameState.joinTimer);
-    gameState.isJoining = false;
-    
-    if (gameState.participants.length === 0) {
-        gameState.client.say(gameState.channel, '❌ لا يوجد مشاركون! اللعبة ملغاة');
-        activeGameCard.classList.add('hidden');
-        return;
-    }
-    
-    gameState.isGameActive = true;
-    gameState.startTime = Date.now();
-    questionCard.style.display = 'block';
-    
-    gameState.client.say(gameState.channel, `✅ بدأت مرحلة الأسئلة! ${gameState.participants.length} مشارك`);
+    gameState.client.say(gameState.channel, `🎮 بدأت اللعبة!`);
     
     startGameTimer();
     selectNextAsker();
-}
+});
 
 function startGameTimer() {
     const updateTimer = () => {
@@ -269,7 +279,7 @@ function selectNextAsker() {
     answerSection.style.display = 'none';
     gameState.currentQuestion = null;
     
-    gameState.client.say(gameState.channel, `❓ دور ${asker} - اكتب سؤالك الآن`);
+    gameState.client.say(gameState.channel, `❓ ${asker}`);
 }
 
 // Handle Messages
@@ -280,10 +290,10 @@ function handleMessage(channel, tags, message, self) {
     const msg = message.trim();
     
     // Join phase
-    if (gameState.isJoining && (msg === 'دخول' || msg.toLowerCase() === 'join')) {
+    if (gameState.isJoining && !gameState.isGameActive && (msg === 'دخول' || msg.toLowerCase() === 'join')) {
         if (!gameState.participants.includes(username)) {
             gameState.participants.push(username);
-            updateParticipantsQueue();
+            updatePreview(); // Update preview in step2
         }
         return;
     }
@@ -328,8 +338,7 @@ submitAnswerBtn.addEventListener('click', () => {
     gameState.currentQuestion.answer = answer;
     gameState.qanda.push(gameState.currentQuestion);
     
-    gameState.client.say(gameState.channel, `💬 ${gameState.currentQuestion.asker}: ${gameState.currentQuestion.question}`);
-    gameState.client.say(gameState.channel, `✅ الإجابة: ${answer}`);
+    gameState.client.say(gameState.channel, `${gameState.currentQuestion.asker}: ${gameState.currentQuestion.question} → ${answer}`);
     
     addToHistory(gameState.currentQuestion.asker, gameState.currentQuestion.question, answer);
     
@@ -400,10 +409,10 @@ function endGame(hasWinner, winner = null) {
     if (hasWinner && winner) {
         winnerSection.style.display = 'block';
         winnerName.textContent = winner;
-        gameState.client.say(gameState.channel, `🎉 ${winner} فاز! الإجابة: ${gameState.secretWord}`);
+        gameState.client.say(gameState.channel, `🎉 ${winner} فاز!`);
     } else {
         winnerSection.style.display = 'none';
-        gameState.client.say(gameState.channel, `⏱️ انتهت اللعبة! الإجابة: ${gameState.secretWord}`);
+        gameState.client.say(gameState.channel, `⏱️ انتهى الوقت`);
     }
 }
 
@@ -411,6 +420,15 @@ function endGame(hasWinner, winner = null) {
 newGameBtn.addEventListener('click', () => {
     resultsCard.classList.add('hidden');
     secretWord.value = '';
+    gameState.participants = [];
+    gameState.isJoining = false;
+    gameState.isGameActive = false;
+    secretWordFloat.style.display = 'none';
+    
+    step1.classList.remove('hidden');
+    step2.classList.add('hidden');
+    
+    updatePreview();
     updateParticipantsQueue();
 });
 
