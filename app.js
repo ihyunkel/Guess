@@ -20,7 +20,10 @@ const gameState = {
     startTime: null,
     gameTimer: null,
     joinTimer: null,
-    gameDuration: 300
+    gameDuration: 300,
+    totalRounds: 1,
+    currentRoundNum: 1,
+    scores: {} // { username: points }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -40,6 +43,7 @@ const setSecretBtn = document.getElementById('setSecretBtn');
 const secretWordDisplay = document.getElementById('secretWordDisplay');
 
 const gameDuration = document.getElementById('gameDuration');
+const roundsCount = document.getElementById('roundsCount');
 const openJoinBtn = document.getElementById('openJoinBtn');
 const startGameBtn = document.getElementById('startGameBtn');
 const step1 = document.getElementById('step1');
@@ -49,12 +53,17 @@ const previewList = document.getElementById('previewList');
 
 const activeGameCard = document.getElementById('activeGameCard');
 const gameTimer = document.getElementById('gameTimer');
+const currentRound = document.getElementById('currentRound');
+const totalRounds = document.getElementById('totalRounds');
+const leaderboardList = document.getElementById('leaderboardList');
 const secretDisplay = document.getElementById('secretDisplay');
 const questionCard = document.getElementById('questionCard');
 const currentAsker = document.getElementById('currentAsker');
 const currentQuestion = document.getElementById('currentQuestion');
 const answerSection = document.getElementById('answerSection');
 const answerInput = document.getElementById('answerInput');
+const quickYes = document.getElementById('quickYes');
+const quickNo = document.getElementById('quickNo');
 const submitAnswerBtn = document.getElementById('submitAnswerBtn');
 const participantsQueue = document.getElementById('participantsQueue');
 const queueCount = document.getElementById('queueCount');
@@ -174,6 +183,15 @@ setSecretBtn.addEventListener('click', () => {
     secretWordDisplay.textContent = word;
 });
 
+// Quick Answer Buttons
+quickYes.addEventListener('click', () => {
+    sendAnswer('نعم');
+});
+
+quickNo.addEventListener('click', () => {
+    sendAnswer('لا');
+});
+
 // Disconnect
 disconnectBtn.addEventListener('click', () => {
     if (gameState.client) {
@@ -235,7 +253,18 @@ startGameBtn.addEventListener('click', () => {
     gameState.currentAskerIndex = -1;
     gameState.qanda = [];
     gameState.gameDuration = parseInt(gameDuration.value);
+    gameState.totalRounds = parseInt(roundsCount.value);
+    gameState.currentRoundNum = 1;
+    gameState.scores = {};
     gameState.startTime = Date.now();
+    
+    // Initialize scores
+    gameState.participants.forEach(p => {
+        gameState.scores[p] = 0;
+    });
+    
+    currentRound.textContent = gameState.currentRoundNum;
+    totalRounds.textContent = gameState.totalRounds;
     
     secretWordFloat.style.display = 'block';
     activeGameCard.classList.remove('hidden');
@@ -245,8 +274,9 @@ startGameBtn.addEventListener('click', () => {
     
     step2.classList.add('hidden');
     updateParticipantsQueue();
+    updateLeaderboard();
     
-    gameState.client.say(gameState.channel, `🎮 بدأت اللعبة!`);
+    gameState.client.say(gameState.channel, `🎮 بدأت اللعبة! الجولة 1/${gameState.totalRounds}`);
     
     startGameTimer();
     selectNextAsker();
@@ -329,15 +359,7 @@ function handleMessage(channel, tags, message, self) {
     }
 }
 
-// Submit Answer
-submitAnswerBtn.addEventListener('click', () => {
-    const answer = answerInput.value.trim();
-    
-    if (!answer) {
-        alert('الرجاء كتابة إجابة');
-        return;
-    }
-    
+function sendAnswer(answer) {
     if (!gameState.currentQuestion) return;
     
     gameState.currentQuestion.answer = answer;
@@ -347,7 +369,20 @@ submitAnswerBtn.addEventListener('click', () => {
     
     addToHistory(gameState.currentQuestion.asker, gameState.currentQuestion.question, answer);
     
+    answerInput.value = '';
     selectNextAsker();
+}
+
+// Submit Answer
+submitAnswerBtn.addEventListener('click', () => {
+    const answer = answerInput.value.trim();
+    
+    if (!answer) {
+        alert('الرجاء كتابة إجابة');
+        return;
+    }
+    
+    sendAnswer(answer);
 });
 
 function addToHistory(asker, question, answer) {
