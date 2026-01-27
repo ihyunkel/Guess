@@ -12,10 +12,11 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <div class="logo-container">
-                <img src="logo.png" alt="Logo" id="logoImage" class="logo">
-                <h1 class="game-title">من أنا؟</h1>
+            <div class="logo-wrapper">
+                <img src="logo.png" alt="Logo" class="logo-new">
             </div>
+            <h1 class="main-title">من أنا؟</h1>
+            <p class="subtitle">لعبة التخمين التفاعلية</p>
         </header>
 
         <!-- Setup Section -->
@@ -41,6 +42,18 @@
 
         <!-- Game Section -->
         <section class="game-section hidden" id="gameSection">
+            
+            <!-- Floating Secret Word Box -->
+            <div class="secret-word-float" id="secretWordFloat">
+                <div class="secret-float-header">
+                    <button class="secret-toggle" id="secretToggle">−</button>
+                    <span class="secret-float-title">🔒 الكلمة السرية</span>
+                </div>
+                <div class="secret-float-content" id="secretFloatContent">
+                    <div class="secret-word-display" id="secretWordDisplay">-</div>
+                </div>
+            </div>
+            
             <!-- Connection Status -->
             <div class="connection-status">
                 <div class="status-info">
@@ -102,12 +115,6 @@
                     </div>
                 </div>
 
-                <!-- Secret Word Display -->
-                <div class="secret-display">
-                    <span class="secret-label">🔒 الكلمة السرية:</span>
-                    <span class="secret-value" id="secretDisplay">-</span>
-                </div>
-
                 <!-- Current Question -->
                 <div class="current-question-card" id="questionCard">
                     <div class="question-from">
@@ -130,11 +137,15 @@
                 <div class="participants-card">
                     <h4 class="participants-title">
                         <span>👥</span>
-                        قائمة الانتظار (<span id="queueCount">0</span>)
+                        المشاركون (<span id="queueCount">0</span>)
                     </h4>
                     <div class="participants-queue" id="participantsQueue">
-                        <div class="empty-state">لا يوجد مشاركون في الانتظار</div>
+                        <div class="empty-state">لا يوجد مشاركون</div>
                     </div>
+                    <button class="btn-primary btn-large" id="startQuestionsBtn" style="margin-top: 15px;">
+                        <span>▶️</span>
+                        بدء الأسئلة
+                    </button>
                 </div>
 
                 <!-- Questions History -->
