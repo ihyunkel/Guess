@@ -50,7 +50,9 @@
                     <span class="secret-float-title">🔒 الكلمة السرية</span>
                 </div>
                 <div class="secret-float-content" id="secretFloatContent">
-                    <div class="secret-word-display" id="secretWordDisplay">-</div>
+                    <input type="text" id="secretWordInput" class="secret-word-input" placeholder="اكتب الكلمة السرية هنا...">
+                    <button class="btn-small btn-primary" id="setSecretBtn">حفظ</button>
+                    <div class="secret-word-display hidden" id="secretWordDisplay">-</div>
                 </div>
             </div>
             
@@ -82,16 +84,14 @@
 
                 <!-- Step 2: Secret Word (Hidden initially) -->
                 <div class="setup-step hidden" id="step2">
-                    <h4 class="step-title">الخطوة 2: الكلمة السرية</h4>
+                    <h4 class="step-title">الخطوة 2: جاهز للبدء</h4>
                     <div class="participants-preview">
                         <p class="preview-label">عدد المشاركين الحالي: <span id="previewCount">0</span></p>
                         <div class="preview-list" id="previewList"></div>
                     </div>
                     
-                    <div class="secret-word-section">
-                        <label class="input-label">🔒 اكتب الكلمة السرية الآن</label>
-                        <input type="text" id="secretWord" class="secret-input" placeholder="مثال: محمد صلاح، القاهرة، iPhone...">
-                        <small class="help-text">يمكن أن تكون: شخصية، مكان، شيء، فيلم، إلخ</small>
+                    <div class="secret-note">
+                        <p>💡 اكتب الكلمة السرية في الصندوق العائم بعد بدء اللعبة</p>
                     </div>
 
                     <!-- Game Duration -->
