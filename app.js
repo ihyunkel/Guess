@@ -1,6 +1,6 @@
 // Twitch OAuth Configuration
 const TWITCH_CONFIG = {
-    clientId: '4yn6hmhiphc2is85h9dhphmfw0xswc',
+    clientId: 'ضع_Client_ID_هنا',
     redirectUri: window.location.origin + window.location.pathname,
     scopes: ['chat:read', 'chat:edit']
 };
@@ -35,9 +35,10 @@ const disconnectBtn = document.getElementById('disconnectBtn');
 const secretWordFloat = document.getElementById('secretWordFloat');
 const secretToggle = document.getElementById('secretToggle');
 const secretFloatContent = document.getElementById('secretFloatContent');
+const secretWordInput = document.getElementById('secretWordInput');
+const setSecretBtn = document.getElementById('setSecretBtn');
 const secretWordDisplay = document.getElementById('secretWordDisplay');
 
-const secretWord = document.getElementById('secretWord');
 const gameDuration = document.getElementById('gameDuration');
 const openJoinBtn = document.getElementById('openJoinBtn');
 const startGameBtn = document.getElementById('startGameBtn');
@@ -158,6 +159,21 @@ secretToggle.addEventListener('click', () => {
     secretToggle.textContent = secretWordFloat.classList.contains('collapsed') ? '+' : '−';
 });
 
+// Set Secret Word from Float
+setSecretBtn.addEventListener('click', () => {
+    const word = secretWordInput.value.trim();
+    if (!word) {
+        alert('الرجاء كتابة الكلمة السرية');
+        return;
+    }
+    
+    gameState.secretWord = word;
+    secretWordInput.classList.add('hidden');
+    setSecretBtn.classList.add('hidden');
+    secretWordDisplay.classList.remove('hidden');
+    secretWordDisplay.textContent = word;
+});
+
 // Disconnect
 disconnectBtn.addEventListener('click', () => {
     if (gameState.client) {
@@ -209,19 +225,11 @@ function updatePreview() {
 
 // Step 2: Start Game
 startGameBtn.addEventListener('click', () => {
-    const word = secretWord.value.trim();
-    
-    if (!word) {
-        alert('الرجاء إدخال الكلمة السرية');
-        return;
-    }
-    
     if (gameState.participants.length === 0) {
         alert('لا يوجد مشاركون! انتظر حتى ينضم أحد');
         return;
     }
     
-    gameState.secretWord = word;
     gameState.isJoining = false;
     gameState.isGameActive = true;
     gameState.currentAskerIndex = -1;
@@ -229,7 +237,6 @@ startGameBtn.addEventListener('click', () => {
     gameState.gameDuration = parseInt(gameDuration.value);
     gameState.startTime = Date.now();
     
-    secretWordDisplay.textContent = word;
     secretWordFloat.style.display = 'block';
     activeGameCard.classList.remove('hidden');
     resultsCard.classList.add('hidden');
@@ -279,7 +286,7 @@ function selectNextAsker() {
     answerSection.style.display = 'none';
     gameState.currentQuestion = null;
     
-    gameState.client.say(gameState.channel, `❓ ${asker}`);
+    gameState.client.say(gameState.channel, `❓ ${asker} اكتب السؤال عندك`);
 }
 
 // Handle Messages
@@ -300,6 +307,12 @@ function handleMessage(channel, tags, message, self) {
     
     // Question phase
     if (gameState.isGameActive) {
+        // Direct guess check - compare with secret word
+        if (gameState.secretWord && msg.toLowerCase().trim() === gameState.secretWord.toLowerCase().trim()) {
+            endGame(true, username);
+            return;
+        }
+        
         const currentAskerName = gameState.participants[gameState.currentAskerIndex];
         
         // Question from current asker
@@ -312,14 +325,6 @@ function handleMessage(channel, tags, message, self) {
             currentQuestion.textContent = msg;
             answerSection.style.display = 'flex';
             return;
-        }
-        
-        // Guess attempt
-        if (msg.startsWith('تخمين:') || msg.startsWith('خمن:')) {
-            const guess = msg.replace(/^(تخمين:|خمن:)\s*/i, '').trim();
-            if (guess.toLowerCase() === gameState.secretWord.toLowerCase()) {
-                endGame(true, username);
-            }
         }
     }
 }
@@ -419,11 +424,16 @@ function endGame(hasWinner, winner = null) {
 // New Game
 newGameBtn.addEventListener('click', () => {
     resultsCard.classList.add('hidden');
-    secretWord.value = '';
     gameState.participants = [];
     gameState.isJoining = false;
     gameState.isGameActive = false;
+    gameState.secretWord = '';
+    
     secretWordFloat.style.display = 'none';
+    secretWordInput.value = '';
+    secretWordInput.classList.remove('hidden');
+    setSecretBtn.classList.remove('hidden');
+    secretWordDisplay.classList.add('hidden');
     
     step1.classList.remove('hidden');
     step2.classList.add('hidden');
