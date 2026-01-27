@@ -1492,3 +1492,51 @@ body::before {
     color: var(--text-muted);
     font-style: italic;
 }
+
+/* Secret Word Input in Float */
+.secret-word-input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    background: var(--bg-darker);
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 10px;
+    transition: var(--transition);
+}
+
+.secret-word-input:focus {
+    outline: none;
+    box-shadow: 0 0 15px var(--primary-glow);
+    transform: scale(1.02);
+}
+
+.secret-word-input::placeholder {
+    color: rgba(0, 217, 255, 0.5);
+}
+
+.btn-small {
+    padding: 8px 20px;
+    font-size: 0.95rem;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.secret-note {
+    background: rgba(0, 217, 255, 0.1);
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.secret-note p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
