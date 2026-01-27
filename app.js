@@ -307,9 +307,14 @@ function selectNextAsker() {
         return;
     }
     
-    // اختيار عشوائي
-    const randomIndex = Math.floor(Math.random() * gameState.participants.length);
-    gameState.currentAskerIndex = randomIndex;
+    // زيادة الـ index بواحد
+    gameState.currentAskerIndex++;
+    
+    // إذا وصلنا لآخر شخص، نرجع للأول
+    if (gameState.currentAskerIndex >= gameState.participants.length) {
+        gameState.currentAskerIndex = 0;
+    }
+    
     const asker = gameState.participants[gameState.currentAskerIndex];
     
     currentAsker.textContent = asker;
