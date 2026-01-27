@@ -1,6 +1,6 @@
 // Twitch OAuth Configuration
 const TWITCH_CONFIG = {
-    clientId: '4yn6hmhiphc2is85h9dhphmfw0xswc',
+    clientId: 'ضع_Client_ID_هنا',
     redirectUri: window.location.origin + window.location.pathname,
     scopes: ['chat:read', 'chat:edit']
 };
@@ -542,6 +542,7 @@ function endGame(hasWinner, winner = null) {
         leaderboardList.appendChild(item);
     });
 }
+
 // New Game
 newGameBtn.addEventListener('click', () => {
     resultsCard.classList.add('hidden');
