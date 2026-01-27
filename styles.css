@@ -1542,25 +1542,42 @@ body::before {
 }
 
 /* Quick Answer Buttons */
+/* Quick Answer Buttons */
+.answer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 25px;
+    background: var(--bg-darker);
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    margin-top: 20px;
+    align-items: center;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .quick-answers {
     display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
 }
 
 .quick-btn {
     flex: 1;
-    padding: 15px 25px;
-    font-size: 1.2rem;
+    padding: 20px 30px;
+    font-size: 1.4rem;
     font-weight: 700;
     border: none;
-    border-radius: 12px;
+    border-radius: 16px;
     cursor: pointer;
     transition: var(--transition);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .quick-yes {
@@ -1585,11 +1602,20 @@ body::before {
 
 .custom-answer-group {
     display: flex;
-    gap: 10px;
+    gap: 15px;
+    width: 100%;
+    max-width: 600px;
 }
 
 .custom-answer-group .answer-input {
     flex: 1;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+}
+
+.custom-answer-group .btn-primary {
+    padding: 15px 30px;
+    font-size: 1.1rem;
 }
 
 /* Leaderboard */
