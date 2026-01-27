@@ -1037,6 +1037,81 @@ body::before {
 
 /* =================== WHO AM I SPECIFIC STYLES =================== */
 
+/* Floating Secret Word Box */
+.secret-word-float {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 320px;
+    background: var(--bg-card);
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow: hidden;
+    transition: var(--transition);
+    display: none;
+}
+
+.secret-word-float.collapsed .secret-float-content {
+    display: none;
+}
+
+.secret-float-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.secret-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--bg-darker);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    line-height: 1;
+    padding: 0;
+}
+
+.secret-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.secret-float-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--bg-darker);
+}
+
+.secret-float-content {
+    padding: 20px;
+}
+
+.secret-word-display {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    text-align: center;
+    padding: 15px;
+    background: rgba(0, 217, 255, 0.1);
+    border-radius: 12px;
+    border: 2px dashed var(--primary-color);
+    word-break: break-word;
+}
+
 .secret-word-section {
     margin-bottom: 25px;
 }
@@ -1060,28 +1135,7 @@ body::before {
     transform: scale(1.02);
 }
 
-.secret-display {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-    margin-bottom: 25px;
-    box-shadow: 0 8px 20px var(--primary-glow);
-}
 
-.secret-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    display: block;
-    margin-bottom: 10px;
-}
-
-.secret-value {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--bg-darker);
-    display: block;
-}
 
 .current-question-card {
     background: var(--bg-card);
@@ -1312,4 +1366,3 @@ body::before {
     font-weight: 800;
     color: var(--primary-color);
 }
-
