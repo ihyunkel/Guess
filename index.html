@@ -96,12 +96,23 @@
 
                     <!-- Game Duration -->
                     <div class="form-group">
-                        <label class="input-label">⏱️ مدة اللعبة</label>
+                        <label class="input-label">⏱️ مدة كل جولة</label>
                         <select id="gameDuration" class="input-select">
                             <option value="300">5 دقائق</option>
                             <option value="600">10 دقائق</option>
                             <option value="900">15 دقائق</option>
                             <option value="1200">20 دقيقة</option>
+                        </select>
+                    </div>
+
+                    <!-- Number of Rounds -->
+                    <div class="form-group">
+                        <label class="input-label">🎯 عدد الجولات</label>
+                        <select id="roundsCount" class="input-select">
+                            <option value="1">جولة واحدة</option>
+                            <option value="5">5 جولات</option>
+                            <option value="10">10 جولات</option>
+                            <option value="15">15 جولة</option>
                         </select>
                     </div>
 
@@ -115,10 +126,20 @@
             <!-- Active Game Card -->
             <div class="active-game-card hidden" id="activeGameCard">
                 <div class="game-header">
-                    <h3 class="game-status">🎮 اللعبة جارية</h3>
-                    <div class="timer-display">
-                        <span class="timer-label">الوقت المتبقي:</span>
-                        <span class="timer-value" id="gameTimer">00:00</span>
+                    <div class="round-info">
+                        <h3 class="game-status">🎮 الجولة <span id="currentRound">1</span> / <span id="totalRounds">1</span></h3>
+                        <div class="timer-display">
+                            <span class="timer-label">الوقت المتبقي:</span>
+                            <span class="timer-value" id="gameTimer">00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="leaderboard-card">
+                    <h4 class="leaderboard-title">🏆 لوحة المتصدرين</h4>
+                    <div class="leaderboard-list" id="leaderboardList">
+                        <div class="empty-state">لا توجد نقاط بعد</div>
                     </div>
                 </div>
 
@@ -132,11 +153,17 @@
                     
                     <!-- Answer Input -->
                     <div class="answer-section" id="answerSection">
-                        <input type="text" id="answerInput" class="answer-input" placeholder="اكتب إجابتك هنا...">
-                        <button class="btn-primary" id="submitAnswerBtn">
-                            <span>✅</span>
-                            إرسال الإجابة
-                        </button>
+                        <div class="quick-answers">
+                            <button class="quick-btn quick-yes" id="quickYes">✅ نعم</button>
+                            <button class="quick-btn quick-no" id="quickNo">❌ لا</button>
+                        </div>
+                        <div class="custom-answer-group">
+                            <input type="text" id="answerInput" class="answer-input" placeholder="أو اكتب إجابة مخصصة...">
+                            <button class="btn-primary" id="submitAnswerBtn">
+                                <span>✅</span>
+                                إرسال
+                            </button>
+                        </div>
                     </div>
                 </div>
 
