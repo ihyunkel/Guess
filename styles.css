@@ -1540,3 +1540,125 @@ body::before {
     color: var(--primary-color);
     font-weight: 600;
 }
+
+/* Quick Answer Buttons */
+.quick-answers {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.quick-btn {
+    flex: 1;
+    padding: 15px 25px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.quick-yes {
+    background: linear-gradient(135deg, #00d9ff, #00a8cc);
+    color: var(--bg-darker);
+}
+
+.quick-yes:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 217, 255, 0.4);
+}
+
+.quick-no {
+    background: linear-gradient(135deg, #ff4081, #ff1744);
+    color: white;
+}
+
+.quick-no:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 64, 129, 0.4);
+}
+
+.custom-answer-group {
+    display: flex;
+    gap: 10px;
+}
+
+.custom-answer-group .answer-input {
+    flex: 1;
+}
+
+/* Leaderboard */
+.leaderboard-card {
+    background: var(--bg-darker);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.leaderboard-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    background: rgba(0, 217, 255, 0.05);
+    border: 1px solid var(--primary-color);
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+.leaderboard-item:hover {
+    background: rgba(0, 217, 255, 0.1);
+    transform: translateX(-5px);
+}
+
+.leaderboard-item .rank {
+    font-size: 1.5rem;
+    font-weight: 700;
+    min-width: 40px;
+    text-align: center;
+}
+
+.leaderboard-item .player-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.leaderboard-item .score {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    min-width: 50px;
+    text-align: right;
+}
+
+.round-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.game-status {
+    margin: 0;
+}
