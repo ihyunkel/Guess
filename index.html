@@ -70,39 +70,46 @@
                     إعداد اللعبة
                 </h3>
 
-                <!-- Secret Word Input -->
-                <div class="secret-word-section">
-                    <label class="input-label">🔒 الكلمة السرية (مخفية عن المشاهدين)</label>
-                    <input type="text" id="secretWord" class="secret-input" placeholder="مثال: محمد صلاح، القاهرة، iPhone...">
-                    <small class="help-text">يمكن أن تكون: شخصية، مكان، شيء، فيلم، إلخ</small>
+                <!-- Step 1: Open Join -->
+                <div class="setup-step" id="step1">
+                    <h4 class="step-title">الخطوة 1: فتح باب الانضمام</h4>
+                    <p class="step-description">اضغط الزر لفتح باب الانضمام للمشاهدين</p>
+                    <button class="btn-primary btn-large" id="openJoinBtn">
+                        <span>🚪</span>
+                        فتح باب الانضمام
+                    </button>
                 </div>
 
-                <!-- Game Duration -->
-                <div class="form-group">
-                    <label class="input-label">⏱️ مدة اللعبة</label>
-                    <select id="gameDuration" class="input-select">
-                        <option value="300">5 دقائق</option>
-                        <option value="600">10 دقائق</option>
-                        <option value="900">15 دقائق</option>
-                        <option value="1200">20 دقيقة</option>
-                    </select>
-                </div>
+                <!-- Step 2: Secret Word (Hidden initially) -->
+                <div class="setup-step hidden" id="step2">
+                    <h4 class="step-title">الخطوة 2: الكلمة السرية</h4>
+                    <div class="participants-preview">
+                        <p class="preview-label">عدد المشاركين الحالي: <span id="previewCount">0</span></p>
+                        <div class="preview-list" id="previewList"></div>
+                    </div>
+                    
+                    <div class="secret-word-section">
+                        <label class="input-label">🔒 اكتب الكلمة السرية الآن</label>
+                        <input type="text" id="secretWord" class="secret-input" placeholder="مثال: محمد صلاح، القاهرة، iPhone...">
+                        <small class="help-text">يمكن أن تكون: شخصية، مكان، شيء، فيلم، إلخ</small>
+                    </div>
 
-                <!-- Join Duration -->
-                <div class="form-group">
-                    <label class="input-label">🚪 مدة الانضمام</label>
-                    <select id="joinDuration" class="input-select">
-                        <option value="30">30 ثانية</option>
-                        <option value="60" selected>دقيقة واحدة</option>
-                        <option value="90">دقيقة ونصف</option>
-                        <option value="120">دقيقتين</option>
-                    </select>
-                </div>
+                    <!-- Game Duration -->
+                    <div class="form-group">
+                        <label class="input-label">⏱️ مدة اللعبة</label>
+                        <select id="gameDuration" class="input-select">
+                            <option value="300">5 دقائق</option>
+                            <option value="600">10 دقائق</option>
+                            <option value="900">15 دقائق</option>
+                            <option value="1200">20 دقيقة</option>
+                        </select>
+                    </div>
 
-                <button class="btn-primary btn-large" id="startGameBtn">
-                    <span>🎮</span>
-                    بدء اللعبة
-                </button>
+                    <button class="btn-primary btn-large" id="startGameBtn">
+                        <span>🎮</span>
+                        بدء الجولة
+                    </button>
+                </div>
             </div>
 
             <!-- Active Game Card -->
@@ -142,10 +149,6 @@
                     <div class="participants-queue" id="participantsQueue">
                         <div class="empty-state">لا يوجد مشاركون</div>
                     </div>
-                    <button class="btn-primary btn-large" id="startQuestionsBtn" style="margin-top: 15px;">
-                        <span>▶️</span>
-                        بدء الأسئلة
-                    </button>
                 </div>
 
                 <!-- Questions History -->
