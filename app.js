@@ -432,32 +432,116 @@ endGameBtn.addEventListener('click', () => {
 
 function endGame(hasWinner, winner = null) {
     clearInterval(gameState.gameTimer);
-    clearInterval(gameState.joinTimer);
     gameState.isGameActive = false;
-    gameState.isJoining = false;
     
-    const duration = Math.floor((Date.now() - (gameState.startTime || Date.now())) / 1000);
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
+    if (hasWinner && winner) {
+        // Add point
+        if (gameState.scores[winner] !== undefined) {
+            gameState.scores[winner]++;
+        }
+        updateLeaderboard();
+        gameState.client.say(gameState.channel, `🎉 ${winner} فاز!`);
+        
+        // Check if more rounds
+        if (gameState.currentRoundNum < gameState.totalRounds) {
+            setTimeout(() => {
+                startNextRound();
+            }, 3000);
+        } else {
+            showFinalResults();
+        }
+    } else {
+        gameState.client.say(gameState.channel, `⏱️ انتهى الوقت`);
+        
+        if (gameState.currentRoundNum < gameState.totalRounds) {
+            setTimeout(() => {
+                startNextRound();
+            }, 3000);
+        } else {
+            showFinalResults();
+        }
+    }
+}
+    function startNextRound() {
+    gameState.currentRoundNum++;
+    gameState.secretWord = '';
+    gameState.currentAskerIndex = -1;
+    gameState.qanda = [];
+    gameState.currentQuestion = null;
+    gameState.startTime = Date.now();
     
+    currentRound.textContent = gameState.currentRoundNum;
+    
+    // Reset secret word input
+    secretWordInput.value = '';
+    secretWordInput.classList.remove('hidden');
+    setSecretBtn.classList.remove('hidden');
+    secretWordDisplay.classList.add('hidden');
+    
+    historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
+    
+    gameState.isGameActive = true;
+    gameState.client.say(gameState.channel, `🎮 الجولة ${gameState.currentRoundNum}/${gameState.totalRounds}`);
+    
+    startGameTimer();
+    selectNextAsker();
+}
+    function showFinalResults() {
     activeGameCard.classList.add('hidden');
     resultsCard.classList.remove('hidden');
     
-    revealedSecret.textContent = gameState.secretWord;
-    totalQuestions.textContent = gameState.qanda.length;
-    totalParticipants.textContent = gameState.participants.length;
-    gameDurationStat.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    // Find winner
+    let maxScore = 0;
+    let finalWinner = null;
+    for (let player in gameState.scores) {
+        if (gameState.scores[player] > maxScore) {
+            maxScore = gameState.scores[player];
+            finalWinner = player;
+        }
+    }
     
-    if (hasWinner && winner) {
+    revealedSecret.textContent = gameState.secretWord || 'غير محددة';
+    
+    if (finalWinner && maxScore > 0) {
         winnerSection.style.display = 'block';
-        winnerName.textContent = winner;
-        gameState.client.say(gameState.channel, `🎉 ${winner} فاز!`);
+        winnerName.textContent = `${finalWinner} (${maxScore} نقطة)`;
+        gameState.client.say(gameState.channel, `👑 البطل: ${finalWinner} بـ ${maxScore} نقطة!`);
     } else {
         winnerSection.style.display = 'none';
-        gameState.client.say(gameState.channel, `⏱️ انتهى الوقت`);
     }
+    
+    totalQuestions.textContent = gameState.qanda.length;
+    totalParticipants.textContent = gameState.participants.length;
+    const duration = Math.floor((Date.now() - gameState.startTime) / 1000 / 60);
+    gameDurationStat.textContent = `${duration} دقيقة`;
 }
-
+    function updateLeaderboard() {
+    if (Object.keys(gameState.scores).length === 0) {
+        leaderboardList.innerHTML = '<div class="empty-state">لا توجد نقاط بعد</div>';
+        return;
+    }
+    
+    const sorted = Object.entries(gameState.scores).sort((a, b) => b[1] - a[1]);
+    
+    leaderboardList.innerHTML = '';
+    sorted.forEach(([player, score], index) => {
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        
+        let medal = '';
+        if (index === 0) medal = '🥇';
+        else if (index === 1) medal = '🥈';
+        else if (index === 2) medal = '🥉';
+        
+        item.innerHTML = `
+            <span class="rank">${medal || (index + 1)}</span>
+            <span class="player-name">${player}</span>
+            <span class="score">${score}</span>
+        `;
+        
+        leaderboardList.appendChild(item);
+    });
+}
 // New Game
 newGameBtn.addEventListener('click', () => {
     resultsCard.classList.add('hidden');
