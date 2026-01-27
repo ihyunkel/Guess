@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>من أنا؟ - لعبة Twitch تفاعلية</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=Amiri:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <img src="logo.png" alt="Logo" id="logoImage" class="logo">
+                <h1 class="game-title">من أنا؟</h1>
+            </div>
+        </header>
+
+        <!-- Setup Section -->
+        <section class="setup-section" id="setupSection">
+            <div class="setup-card">
+                <h2 class="section-title">
+                    <span class="title-icon">🎮</span>
+                    ابدأ اللعب
+                </h2>
+                
+                <div class="auth-method recommended">
+                    <h3 class="method-title">تسجيل دخول مباشر</h3>
+                    <p class="method-description">سجل دخول بحساب Twitch الخاص بك وابدأ اللعب مباشرةً</p>
+                    <button class="btn-primary btn-twitch btn-large" id="twitchLoginBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="margin-left: 10px;">
+                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
+                        </svg>
+                        تسجيل الدخول عبر Twitch
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Section -->
+        <section class="game-section hidden" id="gameSection">
+            <!-- Connection Status -->
+            <div class="connection-status">
+                <div class="status-info">
+                    <span class="status-icon">🟢</span>
+                    <span class="status-text">متصل بـ: <strong id="connectedChannel">-</strong></span>
+                </div>
+                <button class="btn-secondary btn-small" id="disconnectBtn">قطع الاتصال</button>
+            </div>
+
+            <!-- Game Setup Card -->
+            <div class="game-setup-card">
+                <h3 class="card-title">
+                    <span class="card-icon">🎯</span>
+                    إعداد اللعبة
+                </h3>
+
+                <!-- Secret Word Input -->
+                <div class="secret-word-section">
+                    <label class="input-label">🔒 الكلمة السرية (مخفية عن المشاهدين)</label>
+                    <input type="text" id="secretWord" class="secret-input" placeholder="مثال: محمد صلاح، القاهرة، iPhone...">
+                    <small class="help-text">يمكن أن تكون: شخصية، مكان، شيء، فيلم، إلخ</small>
+                </div>
+
+                <!-- Game Duration -->
+                <div class="form-group">
+                    <label class="input-label">⏱️ مدة اللعبة</label>
+                    <select id="gameDuration" class="input-select">
+                        <option value="300">5 دقائق</option>
+                        <option value="600">10 دقائق</option>
+                        <option value="900">15 دقائق</option>
+                        <option value="1200">20 دقيقة</option>
+                    </select>
+                </div>
+
+                <!-- Join Duration -->
+                <div class="form-group">
+                    <label class="input-label">🚪 مدة الانضمام</label>
+                    <select id="joinDuration" class="input-select">
+                        <option value="30">30 ثانية</option>
+                        <option value="60" selected>دقيقة واحدة</option>
+                        <option value="90">دقيقة ونصف</option>
+                        <option value="120">دقيقتين</option>
+                    </select>
+                </div>
+
+                <button class="btn-primary btn-large" id="startGameBtn">
+                    <span>🎮</span>
+                    بدء اللعبة
+                </button>
+            </div>
+
+            <!-- Active Game Card -->
+            <div class="active-game-card hidden" id="activeGameCard">
+                <div class="game-header">
+                    <h3 class="game-status">🎮 اللعبة جارية</h3>
+                    <div class="timer-display">
+                        <span class="timer-label">الوقت المتبقي:</span>
+                        <span class="timer-value" id="gameTimer">00:00</span>
+                    </div>
+                </div>
+
+                <!-- Secret Word Display -->
+                <div class="secret-display">
+                    <span class="secret-label">🔒 الكلمة السرية:</span>
+                    <span class="secret-value" id="secretDisplay">-</span>
+                </div>
+
+                <!-- Current Question -->
+                <div class="current-question-card" id="questionCard">
+                    <div class="question-from">
+                        <span class="from-icon">👤</span>
+                        <span id="currentAsker">-</span>
+                    </div>
+                    <div class="question-text" id="currentQuestion">في انتظار السؤال...</div>
+                    
+                    <!-- Answer Input -->
+                    <div class="answer-section" id="answerSection">
+                        <input type="text" id="answerInput" class="answer-input" placeholder="اكتب إجابتك هنا...">
+                        <button class="btn-primary" id="submitAnswerBtn">
+                            <span>✅</span>
+                            إرسال الإجابة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Participants Queue -->
+                <div class="participants-card">
+                    <h4 class="participants-title">
+                        <span>👥</span>
+                        قائمة الانتظار (<span id="queueCount">0</span>)
+                    </h4>
+                    <div class="participants-queue" id="participantsQueue">
+                        <div class="empty-state">لا يوجد مشاركون في الانتظار</div>
+                    </div>
+                </div>
+
+                <!-- Questions History -->
+                <div class="history-card">
+                    <h4 class="history-title">
+                        <span>📝</span>
+                        الأسئلة والإجابات
+                    </h4>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">لا توجد أسئلة بعد</div>
+                    </div>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="game-controls">
+                    <button class="btn-danger" id="endGameBtn">إنهاء اللعبة</button>
+                </div>
+            </div>
+
+            <!-- Game Results -->
+            <div class="results-card hidden" id="resultsCard">
+                <h3 class="results-title">
+                    <span>🏆</span>
+                    نتيجة اللعبة
+                </h3>
+                
+                <div class="secret-reveal">
+                    <span class="reveal-label">الإجابة الصحيحة:</span>
+                    <span class="reveal-value" id="revealedSecret">-</span>
+                </div>
+
+                <div class="winner-section" id="winnerSection">
+                    <div class="winner-badge">🎉</div>
+                    <h4 class="winner-title">الفائز:</h4>
+                    <div class="winner-name" id="winnerName">-</div>
+                </div>
+
+                <div class="results-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">عدد الأسئلة:</span>
+                        <span class="stat-value" id="totalQuestions">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">عدد المشاركين:</span>
+                        <span class="stat-value" id="totalParticipants">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">مدة اللعبة:</span>
+                        <span class="stat-value" id="gameDurationStat">0</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-large" id="newGameBtn">
+                    <span>🎮</span>
+                    لعبة جديدة
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Load tmi.js library -->
+    <script src="tmi.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
