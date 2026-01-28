@@ -1816,3 +1816,15 @@ body::before {
     padding: 0;
     border: none;
 }
+
+/* Secret Input - Password Style */
+.secret-screen-card .secret-input {
+    -webkit-text-security: disc;
+    text-security: disc;
+}
+
+/* For browsers that don't support text-security */
+.secret-screen-card .secret-input.masked {
+    font-family: 'password', monospace;
+    letter-spacing: 4px;
+}
