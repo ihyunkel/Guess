@@ -308,6 +308,10 @@ startGameBtn.addEventListener('click', () => {
         secretWordDisplay.classList.remove('hidden');
         secretWordDisplay.textContent = word;
         
+        // Start collapsed
+        secretWordFloat.classList.add('collapsed');
+        secretToggle.textContent = '+';
+        
         secretWordFloat.style.display = 'block';
         secretInputScreen.remove();
         
@@ -367,6 +371,36 @@ function selectNextAsker() {
     startQuestionTimer();
     
     gameState.client.say(gameState.channel, `❓ ${asker} اكتب السؤال عندك`);
+}
+
+function playSuccessSound() {
+    // Create AudioContext
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Success melody: C-E-G (major chord)
+    const notes = [
+        { freq: 523.25, time: 0, duration: 0.15 },    // C5
+        { freq: 659.25, time: 0.15, duration: 0.15 }, // E5
+        { freq: 783.99, time: 0.3, duration: 0.3 }    // G5
+    ];
+    
+    notes.forEach(note => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.value = note.freq;
+        
+        // Soft volume
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + note.time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.time + note.duration);
+        
+        oscillator.start(audioContext.currentTime + note.time);
+        oscillator.stop(audioContext.currentTime + note.time + note.duration);
+    });
 }
 
 function normalizeArabicText(text) {
@@ -468,6 +502,10 @@ function handleMessage(channel, tags, message, self) {
         
         if (username === currentAskerName && gameState.secretWord && isSimilarText(command, gameState.secretWord)) {
             clearInterval(gameState.questionTimer);
+            
+            // Play success sound
+            playSuccessSound();
+            
             endGame(true, username);
             return;
         }
@@ -671,6 +709,10 @@ function startNextRound() {
         
         // Show in floating box immediately
         secretWordDisplay.textContent = word;
+        
+        // Start collapsed
+        secretWordFloat.classList.add('collapsed');
+        secretToggle.textContent = '+';
         
         secretInputScreen.remove();
         
