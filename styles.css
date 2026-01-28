@@ -1180,38 +1180,42 @@ body::before {
 
 .current-question-card {
     background: var(--bg-card);
-    border: 2px solid var(--border-color);
-    border-radius: 16px;
-    padding: 25px;
-    margin-bottom: 25px;
+    border: 3px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 35px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 30px rgba(0, 217, 255, 0.2);
 }
 
 .question-from {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
     color: var(--primary-color);
     font-weight: 700;
 }
 
 .from-icon {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 
 .question-text {
-    font-size: 1.3rem;
-    font-weight: 600;
-    line-height: 1.6;
-    padding: 20px;
-    background: rgba(0, 217, 255, 0.05);
-    border-radius: 12px;
-    border-right: 4px solid var(--primary-color);
-    margin-bottom: 20px;
-    min-height: 80px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.8;
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(255, 64, 129, 0.05));
+    border-radius: 16px;
+    border: 3px solid var(--primary-color);
+    margin-bottom: 25px;
+    min-height: 100px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-primary);
 }
 
 .answer-section {
@@ -1308,25 +1312,35 @@ body::before {
 
 .history-item {
     background: var(--bg-darker);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px;
+    transition: var(--transition);
+}
+
+.history-item:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 217, 255, 0.05);
 }
 
 .history-asker {
     font-weight: 700;
     color: var(--primary-color);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
 }
 
 .history-question {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
 }
 
 .history-answer {
     color: var(--success-color);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.2rem;
 }
 
 .secret-reveal {
@@ -1687,4 +1701,118 @@ body::before {
 
 .game-status {
     margin: 0;
+}
+
+/* Secret Input Screen */
+.secret-input-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 14, 39, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+}
+
+.secret-screen-card {
+    background: var(--bg-card);
+    border: 3px solid var(--primary-color);
+    border-radius: 24px;
+    padding: 50px;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.secret-screen-card h2 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.secret-screen-card p {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+.secret-screen-card .secret-input {
+    width: 100%;
+    padding: 20px;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 30px;
+    border: 2px solid var(--primary-color);
+    background: var(--bg-darker);
+    color: var(--primary-color);
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+/* Question Timer */
+.question-timer {
+    position: absolute;
+    top: -60px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: var(--bg-darker);
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px var(--primary-glow);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Leaderboard Toggle Button */
+.leaderboard-toggle-btn {
+    width: 100%;
+    padding: 15px 25px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: var(--bg-darker);
+    border: none;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
+}
+
+.leaderboard-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 217, 255, 0.4);
+}
+
+.leaderboard-toggle-btn span {
+    font-size: 1.5rem;
+}
+
+/* Leaderboard Card - Smooth Toggle */
+.leaderboard-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.leaderboard-card.hidden {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
