@@ -286,7 +286,7 @@ startGameBtn.addEventListener('click', () => {
         <div class="secret-screen-card">
             <h2>🎮 الجولة 1/${gameState.totalRounds}</h2>
             <p>اكتب الكلمة السرية</p>
-            <input type="text" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
+            <input type="password" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
             <button class="btn-primary btn-large" id="startRoundBtn">بدء الجولة</button>
         </div>
     `;
@@ -301,7 +301,13 @@ startGameBtn.addEventListener('click', () => {
         }
         
         gameState.secretWord = word;
+        
+        // Show in floating box immediately (not in input)
+        secretWordInput.classList.add('hidden');
+        setSecretBtn.classList.add('hidden');
+        secretWordDisplay.classList.remove('hidden');
         secretWordDisplay.textContent = word;
+        
         secretWordFloat.style.display = 'block';
         secretInputScreen.remove();
         
@@ -647,7 +653,7 @@ function startNextRound() {
         <div class="secret-screen-card">
             <h2>🎮 الجولة ${gameState.currentRoundNum}/${gameState.totalRounds}</h2>
             <p>اكتب الكلمة السرية للجولة الجديدة</p>
-            <input type="text" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
+            <input type="password" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
             <button class="btn-primary btn-large" id="startRoundBtn">بدء الجولة</button>
         </div>
     `;
@@ -662,7 +668,10 @@ function startNextRound() {
         }
         
         gameState.secretWord = word;
+        
+        // Show in floating box immediately
         secretWordDisplay.textContent = word;
+        
         secretInputScreen.remove();
         
         // Reset UI
