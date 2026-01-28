@@ -20,10 +20,12 @@ const gameState = {
     startTime: null,
     gameTimer: null,
     joinTimer: null,
+    questionTimer: null,
     gameDuration: 300,
     totalRounds: 1,
     currentRoundNum: 1,
-    scores: {} // { username: points }
+    scores: {},
+    questionTimeLimit: 20 // 20 seconds per question
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -55,6 +57,8 @@ const activeGameCard = document.getElementById('activeGameCard');
 const gameTimer = document.getElementById('gameTimer');
 const currentRound = document.getElementById('currentRound');
 const totalRounds = document.getElementById('totalRounds');
+const leaderboardToggle = document.getElementById('leaderboardToggle');
+const leaderboardCard = document.getElementById('leaderboardCard');
 const leaderboardList = document.getElementById('leaderboardList');
 const secretDisplay = document.getElementById('secretDisplay');
 const questionCard = document.getElementById('questionCard');
@@ -168,6 +172,12 @@ secretToggle.addEventListener('click', () => {
     secretToggle.textContent = secretWordFloat.classList.contains('collapsed') ? '+' : '−';
 });
 
+// Toggle Leaderboard
+leaderboardToggle.addEventListener('click', () => {
+    leaderboardCard.classList.toggle('hidden');
+    questionCard.classList.toggle('hidden');
+});
+
 // Set Secret Word from Float
 setSecretBtn.addEventListener('click', () => {
     const word = secretWordInput.value.trim();
@@ -249,14 +259,12 @@ startGameBtn.addEventListener('click', () => {
     }
     
     gameState.isJoining = false;
-    gameState.isGameActive = true;
     gameState.currentAskerIndex = -1;
     gameState.qanda = [];
     gameState.gameDuration = parseInt(gameDuration.value);
     gameState.totalRounds = parseInt(roundsCount.value);
     gameState.currentRoundNum = 1;
     gameState.scores = {};
-    gameState.startTime = Date.now();
     
     // Initialize scores
     gameState.participants.forEach(p => {
@@ -266,20 +274,52 @@ startGameBtn.addEventListener('click', () => {
     currentRound.textContent = gameState.currentRoundNum;
     totalRounds.textContent = gameState.totalRounds;
     
-    secretWordFloat.style.display = 'block';
-    activeGameCard.classList.remove('hidden');
-    resultsCard.classList.add('hidden');
-    questionCard.style.display = 'block';
-    historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
-    
     step2.classList.add('hidden');
     updateParticipantsQueue();
     updateLeaderboard();
     
-    gameState.client.say(gameState.channel, `🎮 بدأت اللعبة! الجولة 1/${gameState.totalRounds}`);
+    // Show secret word input screen for first round
+    const secretInputScreen = document.createElement('div');
+    secretInputScreen.id = 'secretInputScreen';
+    secretInputScreen.className = 'secret-input-screen';
+    secretInputScreen.innerHTML = `
+        <div class="secret-screen-card">
+            <h2>🎮 الجولة 1/${gameState.totalRounds}</h2>
+            <p>اكتب الكلمة السرية</p>
+            <input type="text" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
+            <button class="btn-primary btn-large" id="startRoundBtn">بدء الجولة</button>
+        </div>
+    `;
     
-    startGameTimer();
-    selectNextAsker();
+    document.getElementById('gameSection').appendChild(secretInputScreen);
+    
+    document.getElementById('startRoundBtn').addEventListener('click', () => {
+        const word = document.getElementById('roundSecretInput').value.trim();
+        if (!word) {
+            alert('الرجاء كتابة الكلمة السرية');
+            return;
+        }
+        
+        gameState.secretWord = word;
+        secretWordDisplay.textContent = word;
+        secretWordFloat.style.display = 'block';
+        secretInputScreen.remove();
+        
+        activeGameCard.classList.remove('hidden');
+        resultsCard.classList.add('hidden');
+        questionCard.style.display = 'block';
+        historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
+        
+        gameState.isGameActive = true;
+        gameState.startTime = Date.now();
+        
+        // Countdown 3-2-1
+        countdown321(() => {
+            gameState.client.say(gameState.channel, `🎮 الجولة 1/${gameState.totalRounds}`);
+            startGameTimer();
+            selectNextAsker();
+        });
+    });
 });
 
 function startGameTimer() {
@@ -307,14 +347,8 @@ function selectNextAsker() {
         return;
     }
     
-    // زيادة الـ index بواحد
-    gameState.currentAskerIndex++;
-    
-    // إذا وصلنا لآخر شخص، نرجع للأول
-    if (gameState.currentAskerIndex >= gameState.participants.length) {
-        gameState.currentAskerIndex = 0;
-    }
-    
+    // اختيار بالترتيب (دورة كاملة)
+    gameState.currentAskerIndex = (gameState.currentAskerIndex + 1) % gameState.participants.length;
     const asker = gameState.participants[gameState.currentAskerIndex];
     
     currentAsker.textContent = asker;
@@ -323,7 +357,78 @@ function selectNextAsker() {
     answerSection.style.display = 'none';
     gameState.currentQuestion = null;
     
+    // Start question timer
+    startQuestionTimer();
+    
     gameState.client.say(gameState.channel, `❓ ${asker} اكتب السؤال عندك`);
+}
+
+function normalizeArabicText(text) {
+    if (!text) return '';
+    
+    return text
+        .toLowerCase()
+        .trim()
+        // إزالة "ال" التعريف
+        .replace(/^ال/, '')
+        // توحيد الهمزات
+        .replace(/[أإآ]/g, 'ا')
+        // توحيد التاء المربوطة والهاء
+        .replace(/[ةه]$/g, 'ه')
+        // توحيد الياء
+        .replace(/[ىي]/g, 'ي')
+        // إزالة التشكيل
+        .replace(/[\u064B-\u0652]/g, '')
+        // إزالة المسافات الزائدة
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function isSimilarText(text1, text2) {
+    const normalized1 = normalizeArabicText(text1);
+    const normalized2 = normalizeArabicText(text2);
+    
+    // مطابقة تامة
+    if (normalized1 === normalized2) {
+        return true;
+    }
+    
+    // مراعاة اختلافات طفيفة (مثل ترامب/ترمب)
+    // حساب Levenshtein distance
+    const distance = levenshteinDistance(normalized1, normalized2);
+    const maxLength = Math.max(normalized1.length, normalized2.length);
+    const similarity = 1 - (distance / maxLength);
+    
+    // إذا التشابه أكثر من 85%
+    return similarity >= 0.85;
+}
+
+function levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
 }
 
 // Handle Messages
@@ -344,22 +449,32 @@ function handleMessage(channel, tags, message, self) {
     
     // Question phase
     if (gameState.isGameActive) {
-        // Direct guess check - compare with secret word
-        if (gameState.secretWord && msg.toLowerCase().trim() === gameState.secretWord.toLowerCase().trim()) {
+        // Check if message starts with ! (command)
+        if (!msg.startsWith('!')) {
+            return; // Ignore messages without !
+        }
+        
+        // Remove ! and get the actual message
+        const command = msg.substring(1).trim();
+        
+        // Direct guess check - only from current asker
+        const currentAskerName = gameState.participants[gameState.currentAskerIndex];
+        
+        if (username === currentAskerName && gameState.secretWord && isSimilarText(command, gameState.secretWord)) {
+            clearInterval(gameState.questionTimer);
             endGame(true, username);
             return;
         }
         
-        const currentAskerName = gameState.participants[gameState.currentAskerIndex];
-        
         // Question from current asker
         if (username === currentAskerName && !gameState.currentQuestion) {
+            clearInterval(gameState.questionTimer);
             gameState.currentQuestion = {
                 asker: username,
-                question: msg,
+                question: command,
                 answer: null
             };
-            currentQuestion.textContent = msg;
+            currentQuestion.textContent = command;
             answerSection.style.display = 'flex';
             return;
         }
@@ -391,6 +506,46 @@ submitAnswerBtn.addEventListener('click', () => {
     
     sendAnswer(answer);
 });
+
+function startQuestionTimer() {
+    clearInterval(gameState.questionTimer);
+    let timeLeft = gameState.questionTimeLimit;
+    
+    const timerDisplay = document.createElement('div');
+    timerDisplay.id = 'questionTimerDisplay';
+    timerDisplay.className = 'question-timer';
+    timerDisplay.textContent = `⏱️ ${timeLeft}`;
+    
+    const questionCardEl = document.getElementById('questionCard');
+    const existingTimer = document.getElementById('questionTimerDisplay');
+    if (existingTimer) existingTimer.remove();
+    questionCardEl.insertBefore(timerDisplay, questionCardEl.firstChild);
+    
+    gameState.questionTimer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `⏱️ ${timeLeft}`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(gameState.questionTimer);
+            timerDisplay.remove();
+            // Skip to next player
+            selectNextAsker();
+        }
+    }, 1000);
+}
+
+function countdown321(callback) {
+    let count = 3;
+    const countdownInterval = setInterval(() => {
+        gameState.client.say(gameState.channel, `${count}`);
+        count--;
+        
+        if (count < 1) {
+            clearInterval(countdownInterval);
+            if (callback) callback();
+        }
+    }, 1000);
+}
 
 function addToHistory(asker, question, answer) {
     if (historyList.querySelector('.empty-state')) {
@@ -437,10 +592,16 @@ endGameBtn.addEventListener('click', () => {
 
 function endGame(hasWinner, winner = null) {
     clearInterval(gameState.gameTimer);
+    clearInterval(gameState.joinTimer);
+    clearInterval(gameState.questionTimer);
     gameState.isGameActive = false;
+    gameState.isJoining = false;
+    
+    const existingTimer = document.getElementById('questionTimerDisplay');
+    if (existingTimer) existingTimer.remove();
     
     if (hasWinner && winner) {
-        // Add point
+        // Add point to winner
         if (gameState.scores[winner] !== undefined) {
             gameState.scores[winner]++;
         }
@@ -467,35 +628,65 @@ function endGame(hasWinner, winner = null) {
         }
     }
 }
-    function startNextRound() {
+
+function startNextRound() {
     gameState.currentRoundNum++;
     gameState.secretWord = '';
     gameState.currentAskerIndex = -1;
     gameState.qanda = [];
     gameState.currentQuestion = null;
-    gameState.startTime = Date.now();
     
     currentRound.textContent = gameState.currentRoundNum;
     
-    // Reset secret word input
-    secretWordInput.value = '';
-    secretWordInput.classList.remove('hidden');
-    setSecretBtn.classList.remove('hidden');
-    secretWordDisplay.classList.add('hidden');
+    // Show secret word input screen
+    activeGameCard.classList.add('hidden');
+    const secretInputScreen = document.createElement('div');
+    secretInputScreen.id = 'secretInputScreen';
+    secretInputScreen.className = 'secret-input-screen';
+    secretInputScreen.innerHTML = `
+        <div class="secret-screen-card">
+            <h2>🎮 الجولة ${gameState.currentRoundNum}/${gameState.totalRounds}</h2>
+            <p>اكتب الكلمة السرية للجولة الجديدة</p>
+            <input type="text" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
+            <button class="btn-primary btn-large" id="startRoundBtn">بدء الجولة</button>
+        </div>
+    `;
     
-    historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
+    document.getElementById('gameSection').appendChild(secretInputScreen);
     
-    gameState.isGameActive = true;
-    gameState.client.say(gameState.channel, `🎮 الجولة ${gameState.currentRoundNum}/${gameState.totalRounds}`);
-    
-    startGameTimer();
-    selectNextAsker();
+    document.getElementById('startRoundBtn').addEventListener('click', () => {
+        const word = document.getElementById('roundSecretInput').value.trim();
+        if (!word) {
+            alert('الرجاء كتابة الكلمة السرية');
+            return;
+        }
+        
+        gameState.secretWord = word;
+        secretWordDisplay.textContent = word;
+        secretInputScreen.remove();
+        
+        // Reset UI
+        historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
+        activeGameCard.classList.remove('hidden');
+        questionCard.style.display = 'block';
+        
+        gameState.isGameActive = true;
+        gameState.startTime = Date.now();
+        
+        // Countdown 3-2-1
+        countdown321(() => {
+            gameState.client.say(gameState.channel, `🎮 الجولة ${gameState.currentRoundNum}/${gameState.totalRounds}`);
+            startGameTimer();
+            selectNextAsker();
+        });
+    });
 }
-    function showFinalResults() {
+
+function showFinalResults() {
     activeGameCard.classList.add('hidden');
     resultsCard.classList.remove('hidden');
     
-    // Find winner
+    // Find winner with most points
     let maxScore = 0;
     let finalWinner = null;
     for (let player in gameState.scores) {
@@ -520,12 +711,14 @@ function endGame(hasWinner, winner = null) {
     const duration = Math.floor((Date.now() - gameState.startTime) / 1000 / 60);
     gameDurationStat.textContent = `${duration} دقيقة`;
 }
-    function updateLeaderboard() {
+
+function updateLeaderboard() {
     if (Object.keys(gameState.scores).length === 0) {
         leaderboardList.innerHTML = '<div class="empty-state">لا توجد نقاط بعد</div>';
         return;
     }
     
+    // Sort by score
     const sorted = Object.entries(gameState.scores).sort((a, b) => b[1] - a[1]);
     
     leaderboardList.innerHTML = '';
