@@ -151,9 +151,15 @@
 
                 <!-- Current Question -->
                 <div class="current-question-card" id="questionCard">
-                    <div class="question-from">
-                        <span class="from-icon">👤</span>
-                        <span id="currentAsker">-</span>
+                    <div class="question-header-row">
+                        <div class="question-from">
+                            <span class="from-icon">👤</span>
+                            <span id="currentAsker">-</span>
+                        </div>
+                        <div class="question-timer-display" id="questionTimerDisplay">
+                            <span class="timer-icon">⏱️</span>
+                            <span class="timer-countdown" id="timerCountdown">20</span>
+                        </div>
                     </div>
                     <div class="question-text" id="currentQuestion">في انتظار السؤال...</div>
                     
@@ -170,6 +176,10 @@
                                 إرسال
                             </button>
                         </div>
+                        <button class="btn-skip" id="skipBtn">
+                            <span>⏭️</span>
+                            تخطي السؤال
+                        </button>
                     </div>
                 </div>
 
