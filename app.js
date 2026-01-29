@@ -1,6 +1,6 @@
 // Twitch OAuth Configuration
 const TWITCH_CONFIG = {
-    clientId: '4yn6hmhiphc2is85h9dhphmfw0xswc',
+    clientId: 'ضع_Client_ID_هنا',
     redirectUri: window.location.origin + window.location.pathname,
     scopes: ['chat:read', 'chat:edit']
 };
@@ -351,6 +351,22 @@ function startGameTimer() {
     gameState.gameTimer = setInterval(updateTimer, 1000);
 }
 
+// Shuffle participants array for new round
+function shuffleParticipants() {
+    // Fisher-Yates shuffle algorithm
+    const array = gameState.participants;
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    
+    // Update the queue display
+    updateParticipantsQueue();
+    
+    // Log the new order
+    console.log('ترتيب جديد للجولة:', gameState.participants);
+}
+
 function selectNextAsker() {
     if (gameState.participants.length === 0) {
         endGame(false);
@@ -551,27 +567,39 @@ submitAnswerBtn.addEventListener('click', () => {
     sendAnswer(answer);
 });
 
+// Skip Button
+const skipBtn = document.getElementById('skipBtn');
+skipBtn.addEventListener('click', () => {
+    if (confirm('هل تريد تخطي هذا السؤال؟')) {
+        clearInterval(gameState.questionTimer);
+        selectNextAsker();
+    }
+});
+
 function startQuestionTimer() {
     clearInterval(gameState.questionTimer);
     let timeLeft = gameState.questionTimeLimit;
     
-    const timerDisplay = document.createElement('div');
-    timerDisplay.id = 'questionTimerDisplay';
-    timerDisplay.className = 'question-timer';
-    timerDisplay.textContent = `⏱️ ${timeLeft}`;
+    const timerDisplay = document.getElementById('questionTimerDisplay');
+    const timerCountdown = document.getElementById('timerCountdown');
     
-    const questionCardEl = document.getElementById('questionCard');
-    const existingTimer = document.getElementById('questionTimerDisplay');
-    if (existingTimer) existingTimer.remove();
-    questionCardEl.insertBefore(timerDisplay, questionCardEl.firstChild);
+    if (!timerDisplay || !timerCountdown) return;
+    
+    timerDisplay.classList.remove('warning');
+    timerCountdown.textContent = timeLeft;
     
     gameState.questionTimer = setInterval(() => {
         timeLeft--;
-        timerDisplay.textContent = `⏱️ ${timeLeft}`;
+        timerCountdown.textContent = timeLeft;
+        
+        // Warning at 5 seconds
+        if (timeLeft <= 5) {
+            timerDisplay.classList.add('warning');
+        }
         
         if (timeLeft <= 0) {
             clearInterval(gameState.questionTimer);
-            timerDisplay.remove();
+            timerDisplay.classList.remove('warning');
             // Skip to next player
             selectNextAsker();
         }
@@ -680,6 +708,9 @@ function startNextRound() {
     gameState.qanda = [];
     gameState.currentQuestion = null;
     
+    // Shuffle participants order for new round
+    shuffleParticipants();
+    
     currentRound.textContent = gameState.currentRoundNum;
     
     // Show secret word input screen
@@ -747,7 +778,34 @@ function showFinalResults() {
         }
     }
     
-    revealedSecret.textContent = gameState.secretWord || 'غير محددة';
+    // Show secret word
+    const secretWordEl = document.getElementById('revealedSecret');
+    if (finalWinner && maxScore > 0) {
+        // Someone won
+        secretWordEl.textContent = gameState.secretWord || 'غير محددة';
+        secretWordEl.style.color = '';
+        secretWordEl.parentElement.style.background = '';
+    } else {
+        // No one answered correctly
+        secretWordEl.textContent = gameState.secretWord || 'غير محددة';
+        secretWordEl.style.color = '#ff4444';
+        secretWordEl.parentElement.style.background = 'linear-gradient(135deg, rgba(255, 68, 68, 0.2), rgba(239, 68, 68, 0.1))';
+        secretWordEl.parentElement.style.border = '2px solid #ff4444';
+        
+        // Add "لم يجب أحد" message
+        const noAnswerMsg = document.createElement('p');
+        noAnswerMsg.style.color = '#ff4444';
+        noAnswerMsg.style.fontSize = '1.5rem';
+        noAnswerMsg.style.fontWeight = '700';
+        noAnswerMsg.style.marginTop = '1rem';
+        noAnswerMsg.textContent = '❌ لم يجب أحد بشكل صحيح';
+        
+        const existingMsg = secretWordEl.parentElement.querySelector('p');
+        if (existingMsg && existingMsg.textContent.includes('لم يجب')) {
+            existingMsg.remove();
+        }
+        secretWordEl.parentElement.appendChild(noAnswerMsg);
+    }
     
     if (finalWinner && maxScore > 0) {
         winnerSection.style.display = 'block';
@@ -755,6 +813,7 @@ function showFinalResults() {
         gameState.client.say(gameState.channel, `👑 البطل: ${finalWinner} بـ ${maxScore} نقطة!`);
     } else {
         winnerSection.style.display = 'none';
+        gameState.client.say(gameState.channel, `❌ انتهت اللعبة - لم يجب أحد بشكل صحيح`);
     }
     
     totalQuestions.textContent = gameState.qanda.length;
