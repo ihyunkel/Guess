@@ -25,7 +25,23 @@ const gameState = {
     totalRounds: 1,
     currentRoundNum: 1,
     scores: {},
-    questionTimeLimit: 20 // 20 seconds per question
+    questionTimeLimit: 20, // 20 seconds per question
+    
+    // Team System
+    gameMode: 'solo', // 'solo' or 'teams'
+    teams: {
+        blue: [],
+        red: []
+    },
+    teamScores: {
+        blue: 0,
+        red: 0
+    },
+    currentTeam: 'blue',
+    teamTurnIndex: {
+        blue: 0,
+        red: 0
+    }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -46,6 +62,7 @@ const secretWordDisplay = document.getElementById('secretWordDisplay');
 
 const gameDuration = document.getElementById('gameDuration');
 const roundsCount = document.getElementById('roundsCount');
+const gameMode = document.getElementById('gameMode');
 const openJoinBtn = document.getElementById('openJoinBtn');
 const startGameBtn = document.getElementById('startGameBtn');
 const step1 = document.getElementById('step1');
@@ -264,12 +281,27 @@ startGameBtn.addEventListener('click', () => {
     gameState.gameDuration = parseInt(gameDuration.value);
     gameState.totalRounds = parseInt(roundsCount.value);
     gameState.currentRoundNum = 1;
+    gameState.gameMode = gameMode.value; // Get selected game mode
     gameState.scores = {};
     
-    // Initialize scores
-    gameState.participants.forEach(p => {
-        gameState.scores[p] = 0;
-    });
+    // Initialize based on game mode
+    if (gameState.gameMode === 'teams') {
+        // Divide into teams
+        divideIntoTeams();
+        
+        // Initialize team scores
+        gameState.teamScores.blue = 0;
+        gameState.teamScores.red = 0;
+        
+        // Show teams screen before secret word
+        showTeamsScreen();
+        return; // Will continue after teams screen
+    } else {
+        // Solo mode - Initialize individual scores
+        gameState.participants.forEach(p => {
+            gameState.scores[p] = 0;
+        });
+    }
     
     currentRound.textContent = gameState.currentRoundNum;
     totalRounds.textContent = gameState.totalRounds;
@@ -367,17 +399,90 @@ function shuffleParticipants() {
     console.log('ترتيب جديد للجولة:', gameState.participants);
 }
 
+// Divide participants into two teams
+function divideIntoTeams() {
+    // Shuffle first for fairness
+    const shuffled = [...gameState.participants];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Divide into two teams
+    const mid = Math.ceil(shuffled.length / 2);
+    gameState.teams.blue = shuffled.slice(0, mid);
+    gameState.teams.red = shuffled.slice(mid);
+    
+    // Reset turn indices
+    gameState.teamTurnIndex.blue = 0;
+    gameState.teamTurnIndex.red = 0;
+    gameState.currentTeam = 'blue';
+    
+    console.log('🔵 الفريق الأزرق:', gameState.teams.blue);
+    console.log('🔴 الفريق الأحمر:', gameState.teams.red);
+}
+
+// Shuffle teams for new round
+function shuffleTeams() {
+    // Shuffle blue team
+    const blueArray = gameState.teams.blue;
+    for (let i = blueArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [blueArray[i], blueArray[j]] = [blueArray[j], blueArray[i]];
+    }
+    
+    // Shuffle red team
+    const redArray = gameState.teams.red;
+    for (let i = redArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [redArray[i], redArray[j]] = [redArray[j], redArray[i]];
+    }
+    
+    // Reset turn indices
+    gameState.teamTurnIndex.blue = 0;
+    gameState.teamTurnIndex.red = 0;
+    
+    console.log('🔵 ترتيب جديد - الأزرق:', gameState.teams.blue);
+    console.log('🔴 ترتيب جديد - الأحمر:', gameState.teams.red);
+}
+
 function selectNextAsker() {
     if (gameState.participants.length === 0) {
         endGame(false);
         return;
     }
     
-    // اختيار بالترتيب (دورة كاملة)
-    gameState.currentAskerIndex = (gameState.currentAskerIndex + 1) % gameState.participants.length;
-    const asker = gameState.participants[gameState.currentAskerIndex];
+    let asker;
+    let team = null;
     
-    currentAsker.textContent = asker;
+    if (gameState.gameMode === 'teams') {
+        // Teams mode
+        // Switch team
+        gameState.currentTeam = gameState.currentTeam === 'blue' ? 'red' : 'blue';
+        
+        const currentTeamArray = gameState.teams[gameState.currentTeam];
+        const index = gameState.teamTurnIndex[gameState.currentTeam];
+        
+        asker = currentTeamArray[index];
+        team = gameState.currentTeam;
+        
+        // Next turn for this team
+        gameState.teamTurnIndex[gameState.currentTeam] = (index + 1) % currentTeamArray.length;
+        
+    } else {
+        // Solo mode - original logic
+        gameState.currentAskerIndex = (gameState.currentAskerIndex + 1) % gameState.participants.length;
+        asker = gameState.participants[gameState.currentAskerIndex];
+    }
+    
+    // Update UI
+    if (team) {
+        const teamEmoji = team === 'blue' ? '🔵' : '🔴';
+        currentAsker.innerHTML = `${asker} <span style="font-size: 1.2rem">${teamEmoji}</span>`;
+    } else {
+        currentAsker.textContent = asker;
+    }
+    
     currentQuestion.textContent = 'في انتظار السؤال...';
     answerInput.value = '';
     answerSection.style.display = 'none';
@@ -386,7 +491,8 @@ function selectNextAsker() {
     // Start question timer
     startQuestionTimer();
     
-    gameState.client.say(gameState.channel, `❓ ${asker} اكتب السؤال عندك`);
+    const teamMsg = team ? ` من الفريق ${team === 'blue' ? 'الأزرق 🔵' : 'الأحمر 🔴'}` : '';
+    gameState.client.say(gameState.channel, `❓ ${asker}${teamMsg} اكتب السؤال عندك`);
 }
 
 function playSuccessSound() {
@@ -487,6 +593,44 @@ function levenshteinDistance(str1, str2) {
     return matrix[str2.length][str1.length];
 }
 
+// Check Flexible Answer (Option B - Medium)
+function checkFlexibleAnswer(userAnswer, secretWord) {
+    if (!userAnswer || !secretWord) return false;
+    
+    // Normalize both
+    const normalizedAnswer = normalizeArabicText(userAnswer);
+    const normalizedSecret = normalizeArabicText(secretWord);
+    
+    // Method 1: Exact match
+    if (normalizedAnswer === normalizedSecret) {
+        return true;
+    }
+    
+    // Method 2: Secret word is contained in answer
+    // Example: "!هل هو محمد صلاح؟" contains "محمد صلاح"
+    if (normalizedAnswer.includes(normalizedSecret)) {
+        return true;
+    }
+    
+    // Method 3: All words of secret are present (for multi-word secrets)
+    const secretWords = normalizedSecret.split(/\s+/).filter(w => w.length > 0);
+    if (secretWords.length > 1) {
+        const allWordsPresent = secretWords.every(word => 
+            normalizedAnswer.includes(word)
+        );
+        if (allWordsPresent) {
+            return true;
+        }
+    }
+    
+    // Method 4: Fuzzy matching (for typos)
+    if (isSimilarText(userAnswer, secretWord)) {
+        return true;
+    }
+    
+    return false;
+}
+
 // Handle Messages
 function handleMessage(channel, tags, message, self) {
     if (self) return;
@@ -516,7 +660,7 @@ function handleMessage(channel, tags, message, self) {
         // Direct guess check - only from current asker
         const currentAskerName = gameState.participants[gameState.currentAskerIndex];
         
-        if (username === currentAskerName && gameState.secretWord && isSimilarText(command, gameState.secretWord)) {
+        if (username === currentAskerName && gameState.secretWord && checkFlexibleAnswer(command, gameState.secretWord)) {
             clearInterval(gameState.questionTimer);
             
             // Play success sound
@@ -673,12 +817,24 @@ function endGame(hasWinner, winner = null) {
     if (existingTimer) existingTimer.remove();
     
     if (hasWinner && winner) {
-        // Add point to winner
-        if (gameState.scores[winner] !== undefined) {
-            gameState.scores[winner]++;
+        // Add point based on game mode
+        if (gameState.gameMode === 'teams') {
+            // Find winner's team
+            const team = gameState.teams.blue.includes(winner) ? 'blue' : 'red';
+            gameState.teamScores[team]++;
+            
+            const teamName = team === 'blue' ? 'الأزرق 🔵' : 'الأحمر 🔴';
+            const scores = `🔵 ${gameState.teamScores.blue} - 🔴 ${gameState.teamScores.red}`;
+            gameState.client.say(gameState.channel, `🎉 ${winner} من الفريق ${teamName} فاز! النقاط: ${scores}`);
+        } else {
+            // Solo mode
+            if (gameState.scores[winner] !== undefined) {
+                gameState.scores[winner]++;
+            }
+            gameState.client.say(gameState.channel, `🎉 ${winner} فاز!`);
         }
+        
         updateLeaderboard();
-        gameState.client.say(gameState.channel, `🎉 ${winner} فاز!`);
         
         // Check if more rounds
         if (gameState.currentRoundNum < gameState.totalRounds) {
@@ -708,8 +864,12 @@ function startNextRound() {
     gameState.qanda = [];
     gameState.currentQuestion = null;
     
-    // Shuffle participants order for new round
-    shuffleParticipants();
+    // Shuffle order for new round
+    if (gameState.gameMode === 'teams') {
+        shuffleTeams(); // Shuffle both teams
+    } else {
+        shuffleParticipants(); // Shuffle all participants
+    }
     
     currentRound.textContent = gameState.currentRoundNum;
     
@@ -768,58 +928,186 @@ function showFinalResults() {
     activeGameCard.classList.add('hidden');
     resultsCard.classList.remove('hidden');
     
-    // Find winner with most points
-    let maxScore = 0;
-    let finalWinner = null;
-    for (let player in gameState.scores) {
-        if (gameState.scores[player] > maxScore) {
-            maxScore = gameState.scores[player];
-            finalWinner = player;
-        }
-    }
-    
-    // Show secret word
     const secretWordEl = document.getElementById('revealedSecret');
-    if (finalWinner && maxScore > 0) {
-        // Someone won
-        secretWordEl.textContent = gameState.secretWord || 'غير محددة';
-        secretWordEl.style.color = '';
-        secretWordEl.parentElement.style.background = '';
-    } else {
-        // No one answered correctly
-        secretWordEl.textContent = gameState.secretWord || 'غير محددة';
-        secretWordEl.style.color = '#ff4444';
-        secretWordEl.parentElement.style.background = 'linear-gradient(135deg, rgba(255, 68, 68, 0.2), rgba(239, 68, 68, 0.1))';
-        secretWordEl.parentElement.style.border = '2px solid #ff4444';
-        
-        // Add "لم يجب أحد" message
-        const noAnswerMsg = document.createElement('p');
-        noAnswerMsg.style.color = '#ff4444';
-        noAnswerMsg.style.fontSize = '1.5rem';
-        noAnswerMsg.style.fontWeight = '700';
-        noAnswerMsg.style.marginTop = '1rem';
-        noAnswerMsg.textContent = '❌ لم يجب أحد بشكل صحيح';
-        
-        const existingMsg = secretWordEl.parentElement.querySelector('p');
-        if (existingMsg && existingMsg.textContent.includes('لم يجب')) {
-            existingMsg.remove();
-        }
-        secretWordEl.parentElement.appendChild(noAnswerMsg);
-    }
     
-    if (finalWinner && maxScore > 0) {
-        winnerSection.style.display = 'block';
-        winnerName.textContent = `${finalWinner} (${maxScore} نقطة)`;
-        gameState.client.say(gameState.channel, `👑 البطل: ${finalWinner} بـ ${maxScore} نقطة!`);
+    if (gameState.gameMode === 'teams') {
+        // Teams mode
+        const blueScore = gameState.teamScores.blue;
+        const redScore = gameState.teamScores.red;
+        
+        secretWordEl.textContent = gameState.secretWord || 'غير محددة';
+        
+        if (blueScore > redScore) {
+            // Blue team wins
+            winnerSection.style.display = 'block';
+            winnerName.innerHTML = `
+                <div style="font-size: 1.5rem; margin-bottom: 1rem">🔵 الفريق الأزرق</div>
+                <div style="font-size: 1.2rem">${blueScore} - ${redScore}</div>
+                <div style="margin-top: 1rem; font-size: 1rem">الأعضاء: ${gameState.teams.blue.join('، ')}</div>
+            `;
+            gameState.client.say(gameState.channel, `👑 الفريق الأزرق 🔵 فاز! النقاط: ${blueScore} - ${redScore}`);
+        } else if (redScore > blueScore) {
+            // Red team wins
+            winnerSection.style.display = 'block';
+            winnerName.innerHTML = `
+                <div style="font-size: 1.5rem; margin-bottom: 1rem">🔴 الفريق الأحمر</div>
+                <div style="font-size: 1.2rem">${blueScore} - ${redScore}</div>
+                <div style="margin-top: 1rem; font-size: 1rem">الأعضاء: ${gameState.teams.red.join('، ')}</div>
+            `;
+            gameState.client.say(gameState.channel, `👑 الفريق الأحمر 🔴 فاز! النقاط: ${blueScore} - ${redScore}`);
+        } else {
+            // Tie
+            winnerSection.style.display = 'block';
+            winnerName.innerHTML = `
+                <div style="font-size: 1.5rem; margin-bottom: 1rem">🤝 تعادل!</div>
+                <div style="font-size: 1.2rem">${blueScore} - ${redScore}</div>
+            `;
+            gameState.client.say(gameState.channel, `🤝 تعادل! النقاط: ${blueScore} - ${redScore}`);
+        }
+        
     } else {
-        winnerSection.style.display = 'none';
-        gameState.client.say(gameState.channel, `❌ انتهت اللعبة - لم يجب أحد بشكل صحيح`);
+        // Solo mode - original logic
+        let maxScore = 0;
+        let finalWinner = null;
+        for (let player in gameState.scores) {
+            if (gameState.scores[player] > maxScore) {
+                maxScore = gameState.scores[player];
+                finalWinner = player;
+            }
+        }
+        
+        if (finalWinner && maxScore > 0) {
+            // Someone won
+            secretWordEl.textContent = gameState.secretWord || 'غير محددة';
+            secretWordEl.style.color = '';
+            secretWordEl.parentElement.style.background = '';
+            winnerSection.style.display = 'block';
+            winnerName.textContent = `${finalWinner} (${maxScore} نقطة)`;
+            gameState.client.say(gameState.channel, `👑 البطل: ${finalWinner} بـ ${maxScore} نقطة!`);
+        } else {
+            // No one answered correctly
+            secretWordEl.textContent = gameState.secretWord || 'غير محددة';
+            secretWordEl.style.color = '#ff4444';
+            secretWordEl.parentElement.style.background = 'linear-gradient(135deg, rgba(255, 68, 68, 0.2), rgba(239, 68, 68, 0.1))';
+            secretWordEl.parentElement.style.border = '2px solid #ff4444';
+            
+            // Add "لم يجب أحد" message
+            const noAnswerMsg = document.createElement('p');
+            noAnswerMsg.style.color = '#ff4444';
+            noAnswerMsg.style.fontSize = '1.5rem';
+            noAnswerMsg.style.fontWeight = '700';
+            noAnswerMsg.style.marginTop = '1rem';
+            noAnswerMsg.textContent = '❌ لم يجب أحد بشكل صحيح';
+            
+            const existingMsg = secretWordEl.parentElement.querySelector('p');
+            if (existingMsg && existingMsg.textContent.includes('لم يجب')) {
+                existingMsg.remove();
+            }
+            secretWordEl.parentElement.appendChild(noAnswerMsg);
+            
+            winnerSection.style.display = 'none';
+            gameState.client.say(gameState.channel, `❌ انتهت اللعبة - لم يجب أحد بشكل صحيح`);
+        }
     }
     
     totalQuestions.textContent = gameState.qanda.length;
     totalParticipants.textContent = gameState.participants.length;
     const duration = Math.floor((Date.now() - gameState.startTime) / 1000 / 60);
     gameDurationStat.textContent = `${duration} دقيقة`;
+}
+
+function showTeamsScreen() {
+    step2.classList.add('hidden');
+    
+    const teamsScreen = document.createElement('div');
+    teamsScreen.id = 'teamsDisplayScreen';
+    teamsScreen.className = 'secret-input-screen';
+    teamsScreen.innerHTML = `
+        <div class="secret-screen-card" style="max-width: 700px">
+            <h2>🎮 توزيع الفرق</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-secondary)">تم توزيع اللاعبين بشكل عشوائي</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem">
+                <div style="padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 12px">
+                    <h3 style="color: #3b82f6; margin-bottom: 1rem; font-size: 1.5rem">🔵 الفريق الأزرق (${gameState.teams.blue.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        ${gameState.teams.blue.map(player => `
+                            <div style="padding: 0.75rem; background: rgba(59, 130, 246, 0.2); border-radius: 8px; font-weight: 600">
+                                ${player}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 12px">
+                    <h3 style="color: #ef4444; margin-bottom: 1rem; font-size: 1.5rem">🔴 الفريق الأحمر (${gameState.teams.red.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        ${gameState.teams.red.map(player => `
+                            <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.2); border-radius: 8px; font-weight: 600">
+                                ${player}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-primary btn-large" id="continueToSecretBtn">متابعة</button>
+        </div>
+    `;
+    
+    document.getElementById('gameSection').appendChild(teamsScreen);
+    
+    // Announce teams in chat
+    gameState.client.say(gameState.channel, `🔵 الفريق الأزرق: ${gameState.teams.blue.join('، ')}`);
+    gameState.client.say(gameState.channel, `🔴 الفريق الأحمر: ${gameState.teams.red.join('، ')}`);
+    
+    document.getElementById('continueToSecretBtn').addEventListener('click', () => {
+        teamsScreen.remove();
+        
+        currentRound.textContent = gameState.currentRoundNum;
+        totalRounds.textContent = gameState.totalRounds;
+        updateParticipantsQueue();
+        updateLeaderboard();
+        
+        // Show secret word screen
+        const secretInputScreen = document.createElement('div');
+        secretInputScreen.id = 'secretInputScreen';
+        secretInputScreen.className = 'secret-input-screen';
+        secretInputScreen.innerHTML = `
+            <div class="secret-screen-card">
+                <h2>🎮 الجولة 1/${gameState.totalRounds}</h2>
+                <p>اكتب الكلمة السرية</p>
+                <input type="password" id="roundSecretInput" class="secret-input" placeholder="الكلمة السرية...">
+                <button class="btn-primary btn-large" id="startRoundBtn">بدء الجولة</button>
+            </div>
+        `;
+        
+        document.getElementById('gameSection').appendChild(secretInputScreen);
+        
+        document.getElementById('startRoundBtn').addEventListener('click', () => {
+            const word = document.getElementById('roundSecretInput').value.trim();
+            if (!word) {
+                alert('الرجاء كتابة الكلمة السرية');
+                return;
+            }
+            
+            gameState.secretWord = word;
+            secretWordFloat.classList.remove('collapsed');
+            secretToggle.textContent = '−';
+            secretInputScreen.remove();
+            historyList.innerHTML = '<div class="empty-state">لا توجد أسئلة بعد</div>';
+            activeGameCard.classList.remove('hidden');
+            questionCard.style.display = 'block';
+            gameState.isGameActive = true;
+            gameState.startTime = Date.now();
+            
+            countdown321(() => {
+                gameState.client.say(gameState.channel, `🎮 الجولة ${gameState.currentRoundNum}/${gameState.totalRounds} - الفرق جاهزة!`);
+                startGameTimer();
+                selectNextAsker();
+            });
+        });
+    });
 }
 
 function updateLeaderboard() {
