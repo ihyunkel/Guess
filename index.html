@@ -173,6 +173,12 @@
                     </div>
                     <div class="question-text" id="currentQuestion">في انتظار السؤال...</div>
                     
+                    <!-- Skip Inactive Player Button (before question) -->
+                    <button class="btn-skip-inactive" id="skipInactiveBtn" style="display: none;">
+                        <span>⏭️</span>
+                        تخطي اللاعب (غير نشط)
+                    </button>
+                    
                     <!-- Answer Input -->
                     <div class="answer-section" id="answerSection">
                         <div class="quick-answers">
@@ -198,6 +204,9 @@
                     <h4 class="participants-title">
                         <span>👥</span>
                         المشاركون (<span id="queueCount">0</span>)
+                        <button class="btn-small btn-danger" id="toggleKickMode" style="margin-right: auto; padding: 0.4rem 0.8rem;">
+                            🚫 طرد
+                        </button>
                     </h4>
                     <div class="participants-queue" id="participantsQueue">
                         <div class="empty-state">لا يوجد مشاركون</div>
