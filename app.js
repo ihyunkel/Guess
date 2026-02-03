@@ -971,8 +971,16 @@ function endGame(hasWinner, winner = null) {
     gameState.isGameActive = false;
     gameState.isJoining = false;
     
+    // Don't remove timer - just reset it
     const existingTimer = document.getElementById('questionTimerDisplay');
-    if (existingTimer) existingTimer.remove();
+    if (existingTimer) {
+        existingTimer.classList.remove('warning');
+        const timerCountdown = document.getElementById('timerCountdown');
+        if (timerCountdown) timerCountdown.textContent = '20';
+    }
+    
+    // Hide skip inactive button
+    if (skipInactiveBtn) skipInactiveBtn.style.display = 'none';
     
     if (hasWinner && winner) {
         // Add point based on game mode
