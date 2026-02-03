@@ -89,6 +89,10 @@ const submitAnswerBtn = document.getElementById('submitAnswerBtn');
 const participantsQueue = document.getElementById('participantsQueue');
 const queueCount = document.getElementById('queueCount');
 const historyList = document.getElementById('historyList');
+const skipInactiveBtn = document.getElementById('skipInactiveBtn');
+const toggleKickMode = document.getElementById('toggleKickMode');
+
+let kickModeActive = false;
 const endGameBtn = document.getElementById('endGameBtn');
 
 const resultsCard = document.getElementById('resultsCard');
@@ -657,9 +661,17 @@ function handleMessage(channel, tags, message, self) {
         // Remove ! and get the actual message
         const command = msg.substring(1).trim();
         
-        // Direct guess check - only from current asker
-        const currentAskerName = gameState.participants[gameState.currentAskerIndex];
+        // Get current asker based on game mode
+        let currentAskerName;
+        if (gameState.gameMode === 'teams') {
+            const currentTeamArray = gameState.teams[gameState.currentTeam];
+            const index = (gameState.teamTurnIndex[gameState.currentTeam] - 1 + currentTeamArray.length) % currentTeamArray.length;
+            currentAskerName = currentTeamArray[index];
+        } else {
+            currentAskerName = gameState.participants[gameState.currentAskerIndex];
+        }
         
+        // Direct guess check - only from current asker
         if (username === currentAskerName && gameState.secretWord && checkFlexibleAnswer(command, gameState.secretWord)) {
             clearInterval(gameState.questionTimer);
             
@@ -673,6 +685,7 @@ function handleMessage(channel, tags, message, self) {
         // Question from current asker
         if (username === currentAskerName && !gameState.currentQuestion) {
             clearInterval(gameState.questionTimer);
+            skipInactiveBtn.style.display = 'none'; // Hide skip inactive button
             gameState.currentQuestion = {
                 asker: username,
                 question: command,
@@ -732,6 +745,9 @@ function startQuestionTimer() {
     timerDisplay.classList.remove('warning');
     timerCountdown.textContent = timeLeft;
     
+    // Show skip inactive button
+    skipInactiveBtn.style.display = 'block';
+    
     gameState.questionTimer = setInterval(() => {
         timeLeft--;
         timerCountdown.textContent = timeLeft;
@@ -744,6 +760,7 @@ function startQuestionTimer() {
         if (timeLeft <= 0) {
             clearInterval(gameState.questionTimer);
             timerDisplay.classList.remove('warning');
+            skipInactiveBtn.style.display = 'none';
             // Skip to next player
             selectNextAsker();
         }
@@ -779,8 +796,83 @@ function addToHistory(asker, question, answer) {
     historyList.scrollTop = historyList.scrollHeight;
 }
 
+// Kick Player Function
+function kickPlayer(playerName) {
+    if (!confirm(`هل تريد طرد ${playerName} من اللعبة؟`)) {
+        return;
+    }
+    
+    if (gameState.gameMode === 'teams') {
+        // Remove from teams
+        gameState.teams.blue = gameState.teams.blue.filter(p => p !== playerName);
+        gameState.teams.red = gameState.teams.red.filter(p => p !== playerName);
+        
+        // Update participants list
+        gameState.participants = gameState.participants.filter(p => p !== playerName);
+        
+        // Remove score
+        delete gameState.scores[playerName];
+    } else {
+        // Solo mode
+        const index = gameState.participants.indexOf(playerName);
+        if (index > -1) {
+            gameState.participants.splice(index, 1);
+            
+            // Adjust currentAskerIndex if needed
+            if (gameState.currentAskerIndex >= index) {
+                gameState.currentAskerIndex = Math.max(0, gameState.currentAskerIndex - 1);
+            }
+            
+            // Remove score
+            delete gameState.scores[playerName];
+        }
+    }
+    
+    // Update UI
+    updateParticipantsQueue();
+    updateLeaderboard();
+    
+    // Send message
+    gameState.client.say(gameState.channel, `🚫 تم طرد ${playerName} من اللعبة`);
+    
+    // Check if game should continue
+    if (gameState.participants.length === 0) {
+        alert('لا يوجد مشاركون! اللعبة انتهت.');
+        endGame(false);
+    }
+}
+
+// Toggle Kick Mode
+toggleKickMode.addEventListener('click', () => {
+    kickModeActive = !kickModeActive;
+    
+    if (kickModeActive) {
+        toggleKickMode.textContent = '✅ إلغاء';
+        toggleKickMode.style.background = 'var(--success-color)';
+    } else {
+        toggleKickMode.textContent = '🚫 طرد';
+        toggleKickMode.style.background = '';
+    }
+    
+    updateParticipantsQueue();
+});
+
+// Skip Inactive Player (before question)
+skipInactiveBtn.addEventListener('click', () => {
+    if (confirm('هل تريد تخطي هذا اللاعب؟ (غير نشط)')) {
+        clearInterval(gameState.questionTimer);
+        skipInactiveBtn.style.display = 'none';
+        selectNextAsker();
+    }
+});
+
 function updateParticipantsQueue() {
-    queueCount.textContent = gameState.participants.length;
+    // Update count based on game mode
+    if (gameState.gameMode === 'teams') {
+        queueCount.textContent = gameState.teams.blue.length + gameState.teams.red.length;
+    } else {
+        queueCount.textContent = gameState.participants.length;
+    }
     
     if (gameState.participants.length === 0) {
         participantsQueue.innerHTML = '<div class="empty-state">لا يوجد مشاركون</div>';
@@ -788,15 +880,61 @@ function updateParticipantsQueue() {
     }
     
     participantsQueue.innerHTML = '';
-    gameState.participants.forEach((p, i) => {
-        const badge = document.createElement('div');
-        badge.className = 'participant-badge';
-        if (i === gameState.currentAskerIndex) {
-            badge.classList.add('active');
-        }
-        badge.textContent = p;
-        participantsQueue.appendChild(badge);
-    });
+    
+    if (gameState.gameMode === 'teams') {
+        // Show teams
+        gameState.teams.blue.forEach((p) => {
+            const badge = document.createElement('div');
+            badge.className = 'participant-badge team-blue';
+            badge.innerHTML = `${p} 🔵`;
+            
+            if (kickModeActive) {
+                const kickBtn = document.createElement('button');
+                kickBtn.className = 'kick-btn';
+                kickBtn.innerHTML = '❌';
+                kickBtn.onclick = () => kickPlayer(p);
+                badge.appendChild(kickBtn);
+            }
+            
+            participantsQueue.appendChild(badge);
+        });
+        
+        gameState.teams.red.forEach((p) => {
+            const badge = document.createElement('div');
+            badge.className = 'participant-badge team-red';
+            badge.innerHTML = `${p} 🔴`;
+            
+            if (kickModeActive) {
+                const kickBtn = document.createElement('button');
+                kickBtn.className = 'kick-btn';
+                kickBtn.innerHTML = '❌';
+                kickBtn.onclick = () => kickPlayer(p);
+                badge.appendChild(kickBtn);
+            }
+            
+            participantsQueue.appendChild(badge);
+        });
+    } else {
+        // Solo mode
+        gameState.participants.forEach((p, i) => {
+            const badge = document.createElement('div');
+            badge.className = 'participant-badge';
+            if (i === gameState.currentAskerIndex) {
+                badge.classList.add('active');
+            }
+            badge.textContent = p;
+            
+            if (kickModeActive) {
+                const kickBtn = document.createElement('button');
+                kickBtn.className = 'kick-btn';
+                kickBtn.innerHTML = '❌';
+                kickBtn.onclick = () => kickPlayer(p);
+                badge.appendChild(kickBtn);
+            }
+            
+            participantsQueue.appendChild(badge);
+        });
+    }
 }
 
 // End Game
