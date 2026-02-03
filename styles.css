@@ -1918,3 +1918,69 @@ body::before {
 .btn-skip span {
     font-size: 1.25rem;
 }
+
+/* Skip Inactive Button */
+.btn-skip-inactive {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #FFA500, #FF8C00);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+}
+
+.btn-skip-inactive:hover {
+    background: linear-gradient(135deg, #FF8C00, #FF7F00);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 165, 0, 0.5);
+}
+
+.btn-skip-inactive span {
+    font-size: 1.25rem;
+}
+
+/* Kick Button in Badge */
+.kick-btn {
+    margin-right: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kick-btn:hover {
+    background: #ff1a4d;
+    transform: scale(1.1);
+}
+
+/* Team Badges */
+.participant-badge.team-blue {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+    border: 2px solid #3b82f6;
+}
+
+.participant-badge.team-red {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+    border: 2px solid #ef4444;
+}
+
+.participants-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
