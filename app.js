@@ -479,6 +479,9 @@ function selectNextAsker() {
         asker = gameState.participants[gameState.currentAskerIndex];
     }
     
+    // Make sure questionCard is visible
+    questionCard.style.display = 'block';
+    
     // Update UI
     if (team) {
         const teamEmoji = team === 'blue' ? '🔵' : '🔴';
@@ -491,6 +494,8 @@ function selectNextAsker() {
     answerInput.value = '';
     answerSection.style.display = 'none';
     gameState.currentQuestion = null;
+    
+    console.log('🎯 selectNextAsker - Starting timer for:', asker);
     
     // Start question timer
     startQuestionTimer();
@@ -740,17 +745,31 @@ function startQuestionTimer() {
     const timerDisplay = document.getElementById('questionTimerDisplay');
     const timerCountdown = document.getElementById('timerCountdown');
     
-    if (!timerDisplay || !timerCountdown) return;
+    console.log('🎯 startQuestionTimer called');
+    console.log('timerDisplay:', timerDisplay);
+    console.log('timerCountdown:', timerCountdown);
+    console.log('timeLeft:', timeLeft);
     
+    if (!timerDisplay || !timerCountdown) {
+        console.error('❌ Timer elements not found!');
+        return;
+    }
+    
+    // Make sure timer is visible
+    timerDisplay.style.display = 'flex';
     timerDisplay.classList.remove('warning');
     timerCountdown.textContent = timeLeft;
     
     // Show skip inactive button
     skipInactiveBtn.style.display = 'block';
     
+    console.log('✅ Timer started at', timeLeft);
+    
     gameState.questionTimer = setInterval(() => {
         timeLeft--;
         timerCountdown.textContent = timeLeft;
+        
+        console.log('⏱️ Timer:', timeLeft);
         
         // Warning at 5 seconds
         if (timeLeft <= 5) {
@@ -761,6 +780,7 @@ function startQuestionTimer() {
             clearInterval(gameState.questionTimer);
             timerDisplay.classList.remove('warning');
             skipInactiveBtn.style.display = 'none';
+            console.log('⏰ Time up! Skipping to next player');
             // Skip to next player
             selectNextAsker();
         }
