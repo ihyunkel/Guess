@@ -1188,97 +1188,46 @@ function showTeamsScreen() {
     const teamsScreen = document.createElement('div');
     teamsScreen.id = 'teamsDisplayScreen';
     teamsScreen.className = 'secret-input-screen';
-    
-    function renderTeams() {
-        teamsScreen.innerHTML = `
-            <div class="secret-screen-card" style="max-width: 900px">
-                <h2>🎮 توزيع الفرق</h2>
-                <p style="margin-bottom: 1rem; color: var(--text-secondary)">يمكنك نقل اللاعبين بين الفرق لتحقيق التوازن</p>
-                <p style="margin-bottom: 2rem; color: var(--warning-color); font-size: 0.9rem">💡 اضغط على الأسهم لنقل اللاعب للفريق الآخر</p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem">
-                    <div style="padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 12px">
-                        <h3 style="color: #3b82f6; margin-bottom: 1rem; font-size: 1.5rem">🔵 الفريق الأزرق (<span id="blueCount">${gameState.teams.blue.length}</span>)</h3>
-                        <div id="blueTeamContainer" style="display: flex; flex-direction: column; gap: 0.5rem">
-                            ${gameState.teams.blue.map(player => `
-                                <div class="team-player-item" data-player="${player}" data-team="blue" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(59, 130, 246, 0.2); border-radius: 8px; font-weight: 600">
-                                    <span>${player}</span>
-                                    <button class="move-player-btn" onclick="movePlayerToRed('${player}')" style="padding: 0.25rem 0.75rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s">
-                                        ➡️
-                                    </button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div style="padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 12px">
-                        <h3 style="color: #ef4444; margin-bottom: 1rem; font-size: 1.5rem">🔴 الفريق الأحمر (<span id="redCount">${gameState.teams.red.length}</span>)</h3>
-                        <div id="redTeamContainer" style="display: flex; flex-direction: column; gap: 0.5rem">
-                            ${gameState.teams.red.map(player => `
-                                <div class="team-player-item" data-player="${player}" data-team="red" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(239, 68, 68, 0.2); border-radius: 8px; font-weight: 600">
-                                    <button class="move-player-btn" onclick="movePlayerToBlue('${player}')" style="padding: 0.25rem 0.75rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s">
-                                        ⬅️
-                                    </button>
-                                    <span>${player}</span>
-                                </div>
-                            `).join('')}
-                        </div>
+    teamsScreen.innerHTML = `
+        <div class="secret-screen-card" style="max-width: 700px">
+            <h2>🎮 توزيع الفرق</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-secondary)">تم توزيع اللاعبين بشكل عشوائي</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem">
+                <div style="padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 12px">
+                    <h3 style="color: #3b82f6; margin-bottom: 1rem; font-size: 1.5rem">🔵 الفريق الأزرق (${gameState.teams.blue.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        ${gameState.teams.blue.map(player => `
+                            <div style="padding: 0.75rem; background: rgba(59, 130, 246, 0.2); border-radius: 8px; font-weight: 600">
+                                ${player}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 1rem; margin-bottom: 1rem">
-                    <button class="btn-secondary btn-large" id="shuffleTeamsBtn" style="flex: 1">
-                        🔀 إعادة التوزيع العشوائي
-                    </button>
+                <div style="padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 12px">
+                    <h3 style="color: #ef4444; margin-bottom: 1rem; font-size: 1.5rem">🔴 الفريق الأحمر (${gameState.teams.red.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                        ${gameState.teams.red.map(player => `
+                            <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.2); border-radius: 8px; font-weight: 600">
+                                ${player}
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-                
-                <button class="btn-primary btn-large" id="continueToSecretBtn">✅ تأكيد والمتابعة</button>
             </div>
-        `;
-    }
+            
+            <button class="btn-primary btn-large" id="continueToSecretBtn">متابعة</button>
+        </div>
+    `;
     
-    // Move player functions
-    window.movePlayerToRed = function(player) {
-        // Remove from blue
-        const index = gameState.teams.blue.indexOf(player);
-        if (index > -1) {
-            gameState.teams.blue.splice(index, 1);
-            // Add to red
-            gameState.teams.red.push(player);
-            renderTeams();
-        }
-    };
-    
-    window.movePlayerToBlue = function(player) {
-        // Remove from red
-        const index = gameState.teams.red.indexOf(player);
-        if (index > -1) {
-            gameState.teams.red.splice(index, 1);
-            // Add to blue
-            gameState.teams.blue.push(player);
-            renderTeams();
-        }
-    };
-    
-    renderTeams();
     document.getElementById('gameSection').appendChild(teamsScreen);
-    
-    // Shuffle teams button
-    document.getElementById('shuffleTeamsBtn').addEventListener('click', () => {
-        divideIntoTeams();
-        renderTeams();
-    });
     
     // Announce teams in chat
     gameState.client.say(gameState.channel, `🔵 الفريق الأزرق: ${gameState.teams.blue.join('، ')}`);
     gameState.client.say(gameState.channel, `🔴 الفريق الأحمر: ${gameState.teams.red.join('، ')}`);
     
     document.getElementById('continueToSecretBtn').addEventListener('click', () => {
-        // Final announcement
-        gameState.client.say(gameState.channel, `✅ الفرق النهائية:`);
-        gameState.client.say(gameState.channel, `🔵 الأزرق: ${gameState.teams.blue.join('، ')}`);
-        gameState.client.say(gameState.channel, `🔴 الأحمر: ${gameState.teams.red.join('، ')}`);
-        
         teamsScreen.remove();
         
         currentRound.textContent = gameState.currentRoundNum;
