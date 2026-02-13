@@ -1986,3 +1986,39 @@ body::before {
     align-items: center;
     gap: 0.625rem;
 }
+
+/* Team Transfer Buttons */
+.move-player-btn {
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+}
+
+.move-player-btn:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.move-player-btn:active {
+    transform: scale(1.05);
+}
+
+.team-player-item {
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.team-player-item:hover {
+    transform: translateX(3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
